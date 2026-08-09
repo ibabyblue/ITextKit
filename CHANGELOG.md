@@ -2,6 +2,14 @@
 
 All notable changes to ITextKit are documented in this file.
 
+## 0.2.0 - 2026-08-09
+
+### Added
+
+- Independent SwiftUI `ITextTypewriter` and UIKit `ITextTypewriterView` one-shot text presentation.
+- Plain and attributed typewriter input with composed-character boundaries, prefix-driven intrinsic sizing, native wrapping, lifecycle suspension, Reduce Motion completion, and full-text VoiceOver output.
+- Typewriter core, SwiftUI, UIKit, example, and UI-test coverage.
+
 ## 0.1.0 - 2026-08-09
 
 ### Added

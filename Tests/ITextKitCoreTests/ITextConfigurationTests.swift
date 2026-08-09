@@ -46,4 +46,25 @@ final class ITextConfigurationTests: XCTestCase {
         XCTAssertEqual(nonfinite.spacing, 24)
         XCTAssertEqual(nonfinite.initialDelay, 1)
     }
+
+    func testTypewriterDefaults() {
+        XCTAssertEqual(ITextTypewriterConfiguration.default.charactersPerSecond, 20)
+        XCTAssertEqual(ITextTypewriterConfiguration.default.initialDelay, 0)
+    }
+
+    func testTypewriterInvalidValuesAreNormalizedAtConsumption() {
+        let invalidSpeed = ITextTypewriterConfiguration(
+            charactersPerSecond: 0,
+            initialDelay: -2
+        ).resolved
+        XCTAssertEqual(invalidSpeed.charactersPerSecond, 20)
+        XCTAssertEqual(invalidSpeed.initialDelay, 0)
+
+        let nonfinite = ITextTypewriterConfiguration(
+            charactersPerSecond: .infinity,
+            initialDelay: .nan
+        ).resolved
+        XCTAssertEqual(nonfinite.charactersPerSecond, 20)
+        XCTAssertEqual(nonfinite.initialDelay, 0)
+    }
 }

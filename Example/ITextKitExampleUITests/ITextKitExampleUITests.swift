@@ -30,6 +30,19 @@ final class ITextKitExampleUITests: XCTestCase {
         ]
         XCTAssertTrue(richMarquee.waitForExistence(timeout: 2))
         keepScreenshot(of: app, named: "SwiftUI Attributed Marquee")
+
+        app.swipeUp()
+        XCTAssertTrue(app.staticTexts["Plain typewriter"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Attributed typewriter"].exists)
+        XCTAssertTrue(app.otherElements[
+            "A plain typewriter grows wider, then wraps and grows taller."
+        ].exists)
+        XCTAssertTrue(app.otherElements[
+            "Rich 👨‍👩‍👧‍👦 typewriter text keeps its color, weight, and underline while it grows."
+        ].exists)
+        XCTAssertTrue(app.buttons["Replay Typewriter"].exists)
+        app.buttons["Replay Typewriter"].tap()
+        keepScreenshot(of: app, named: "SwiftUI Typewriter")
     }
 
     func testUIKitTabContainsNativeControls() {
@@ -58,6 +71,19 @@ final class ITextKitExampleUITests: XCTestCase {
         ]
         XCTAssertTrue(richMarquee.waitForExistence(timeout: 2))
         keepScreenshot(of: app, named: "UIKit Attributed Marquee")
+
+        app.swipeUp()
+        XCTAssertTrue(app.staticTexts["Plain typewriter"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Attributed typewriter"].exists)
+        XCTAssertTrue(app.otherElements[
+            "A plain UIKit typewriter grows wider, then wraps and grows taller."
+        ].exists)
+        XCTAssertTrue(app.otherElements[
+            "Rich 👨‍👩‍👧‍👦 UIKit typewriter text keeps its color, weight, and underline while it grows."
+        ].exists)
+        XCTAssertTrue(app.buttons["Replay Typewriter"].exists)
+        app.buttons["Replay Typewriter"].tap()
+        keepScreenshot(of: app, named: "UIKit Typewriter")
     }
 
     private func keepScreenshot(of app: XCUIApplication, named name: String) {

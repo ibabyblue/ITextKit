@@ -4,7 +4,7 @@ Native text motion controls for SwiftUI and UIKit, delivered as one Swift Packag
 
 ![iOS 15+](https://img.shields.io/badge/iOS-15%2B-blue)
 ![Swift 5.10+](https://img.shields.io/badge/Swift-5.10%2B-orange)
-![Release 0.1.0](https://img.shields.io/badge/release-0.1.0-purple)
+![Release 0.2.0](https://img.shields.io/badge/release-0.2.0-purple)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -14,9 +14,10 @@ ITextKit is a UI component library for text presentation. It is not a wrapper ar
 
 - `ITextRotator` and `ITextRotatorView` rotate through variable-height text with an upward fade
 - `ITextMarquee` and `ITextMarqueeView` move one overflowing line in a seamless loop
+- `ITextTypewriter` and `ITextTypewriterView` reveal one complete character at a time while their ideal size grows
 - Plain `String` APIs plus native `AttributedString` and `NSAttributedString` input
 - One package product and one module: `import ITextKit` in SwiftUI, UIKit, or mixed targets
-- Declarative SwiftUI playback and imperative UIKit playback
+- Declarative SwiftUI and imperative UIKit playback for rotator and marquee; automatic one-shot typewriter playback
 - Exact pause/resume for remaining delays, transition progress, height, and marquee offset
 - Lifecycle suspension that preserves explicit playback state and progress
 - Reduce Motion, right-to-left layout, Dynamic Type, and VoiceOver-aware rendering
@@ -38,7 +39,7 @@ For a `Package.swift` dependency:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.1.0")
+    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.2.0")
 ]
 ```
 
@@ -135,6 +136,7 @@ status.underlineStyle = .single
 
 let rotator = ITextRotator(attributedTexts: [status])
 let marquee = ITextMarquee(attributedText: status)
+let typewriter = ITextTypewriter(attributedText: status)
 ```
 
 ```swift
@@ -150,6 +152,7 @@ let status = NSAttributedString(
 
 let rotator = ITextRotatorView(attributedTexts: [status])
 let marquee = ITextMarqueeView(attributedText: status)
+let typewriter = ITextTypewriterView(attributedText: status)
 ```
 
 The shared inline visual contract covers font (including size and weight), color, kern, underline, strikethrough, and baseline attributes. UIKit also honors native `NSParagraphStyle`; on iOS 15 SwiftUI paragraph layout remains view-level through modifiers such as `multilineTextAlignment`. Inline attributes win over view-level defaults such as `font` and `textColor`. Other native or custom attributes are passed to the platform renderer without an ITextKit rendering guarantee. Attachments are not a dedicated feature, and link interaction is intentionally unavailable because motion controls are noninteractive.
@@ -188,7 +191,39 @@ marquee.resume()
 
 Motion travels left in left-to-right layout and right in right-to-left layout. Changing text, font, bounds, layout direction, or configuration resets to semantic leading and reapplies the initial delay.
 
+## Text Typewriter
+
+The typewriter is an independent, one-shot text presentation. It reveals the first complete Swift `Character` immediately after its initial delay, then reveals subsequent characters at the configured rate. Extended grapheme clusters such as a family emoji are never split, attributed runs are preserved, and the completed text remains visible.
+
+### SwiftUI
+
+```swift
+ITextTypewriter(
+    text: String(localized: "This message grows as it is revealed"),
+    configuration: .init(charactersPerSecond: 20, initialDelay: 0)
+)
+.font(.body)
+.frame(maxWidth: 280, alignment: .leading)
+```
+
+### UIKit
+
+```swift
+let typewriter = ITextTypewriterView(
+    text: "This message grows as it is revealed"
+)
+typewriter.font = .preferredFont(forTextStyle: .body)
+typewriter.numberOfLines = 0
+typewriter.widthAnchor.constraint(lessThanOrEqualToConstant: 280).isActive = true
+```
+
+The visual size starts at zero and follows the currently revealed prefix. The API intentionally has no `maximumWidth`: constrain the SwiftUI layout or UIKit view with normal layout primitives, and native text wrapping makes the height grow when the prefix reaches that width.
+
+Typewriter playback starts automatically when the view is visible and the scene is active. Leaving the active hierarchy freezes exact progress; returning resumes it. Content or configuration changes restart from an empty prefix, while view-level font, Dynamic Type, and layout-width changes only remeasure the current prefix. There are no playback controls, cursor, callbacks, gestures, sounds, or haptics.
+
 ## Playback Contract
+
+The following explicit playback contract applies to rotator and marquee. Typewriter uses the automatic one-shot lifecycle described above.
 
 `ITextPlaybackState` has three values:
 
@@ -204,9 +239,11 @@ Leaving a window, disappearing, or moving to an inactive application scene suspe
 
 - Internal transition and repeated-copy labels are hidden from accessibility
 - VoiceOver sees only the current rotator characters or the real marquee characters, without attributes
+- VoiceOver sees the typewriter's complete plain text from the start, without per-character announcements
 - Automatic rotation does not post announcements
 - Reduce Motion turns rotator movement into a cross-fade
 - Reduce Motion stops marquee movement and shows one tail-truncated line
+- Reduce Motion completes typewriter text immediately; turning it off does not replay completed content
 
 ## Configuration Resolution
 
@@ -218,6 +255,8 @@ Public configuration values remain the values supplied by the caller. Renderers 
 | Rotator `transitionDuration < 0` | `0` |
 | Marquee `speed <= 0` | static text |
 | Negative marquee spacing or delay | `0` |
+| Typewriter `charactersPerSecond <= 0` | `20` characters per second |
+| Negative typewriter delay | `0` |
 | Any non-finite value | that property's default |
 
 ## Documentation and Example
@@ -225,6 +264,7 @@ Public configuration values remain the values supplied by the caller. Renderers 
 - [DocC overview](Sources/ITextKit/Documentation.docc/ITextKit.md)
 - [Rotator guide](Sources/ITextKit/Documentation.docc/TextRotator.md)
 - [Marquee guide](Sources/ITextKit/Documentation.docc/TextMarquee.md)
+- [Typewriter guide](Sources/ITextKit/Documentation.docc/TextTypewriter.md)
 - [Attributed text contract](Sources/ITextKit/Documentation.docc/AttributedText.md)
 - [Playback and lifecycle](Sources/ITextKit/Documentation.docc/PlaybackAndLifecycle.md)
 - [Offline SwiftUI and UIKit example](Example/README.md)

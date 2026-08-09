@@ -22,3 +22,7 @@ The package advances deterministic state from display-link deltas instead of han
 ## Environment Suspension
 
 When a UIKit view leaves its window, a SwiftUI view disappears, or the application scene becomes inactive, ITextKit stops its display link but does not modify explicit playback state. If the same view returns while state remains playing, it continues from its saved position.
+
+## Automatic Typewriter Lifecycle
+
+``ITextTypewriter`` and ``ITextTypewriterView`` do not use ``ITextPlaybackState`` and do not expose `start()`, `pause()`, `resume()`, or `stop()`. Assigning content arms a one-shot reveal. Time begins only after the view is visible in an active scene, freezes at the exact prefix and fractional character interval when inactive, and resumes when active again. Once complete, content remains complete across later visibility changes.

@@ -4,6 +4,7 @@ import SwiftUI
 struct SwiftUIExampleView: View {
     @State private var playbackState = ITextPlaybackState.playing
     @State private var playbackGeneration = 0
+    @State private var typewriterGeneration = 0
     @State private var settledDescription = "Initial item"
 
     private let messages = [
@@ -71,9 +72,46 @@ struct SwiftUIExampleView: View {
                 .padding(.vertical, 12)
                 .background(Color.green.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
                 .id(playbackGeneration)
+
+                typewriterReplayButton
+
+                sectionTitle("Plain typewriter")
+
+                HStack(alignment: .top, spacing: 0) {
+                    ITextTypewriter(
+                        text: plainTypewriterText,
+                        configuration: .init(charactersPerSecond: 24, initialDelay: 0.35)
+                    )
+                    .font(.body.weight(.medium))
+                    .id(typewriterGeneration)
+                    .padding(16)
+                    .background(Color.cyan.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
+                    .frame(maxWidth: 280, alignment: .leading)
+
+                    Spacer(minLength: 0)
+                }
+
+                sectionTitle("Attributed typewriter")
+
+                HStack(alignment: .top, spacing: 0) {
+                    ITextTypewriter(
+                        attributedText: attributedTypewriter,
+                        configuration: .init(charactersPerSecond: 24, initialDelay: 0.35)
+                    )
+                    .id(typewriterGeneration)
+                    .padding(16)
+                    .background(Color.indigo.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                    .frame(maxWidth: 280, alignment: .leading)
+
+                    Spacer(minLength: 0)
+                }
             }
             .padding()
         }
+    }
+
+    private var plainTypewriterText: String {
+        "A plain typewriter grows wider, then wraps and grows taller."
     }
 
     private var attributedMessages: [AttributedString] {
@@ -96,6 +134,14 @@ struct SwiftUIExampleView: View {
         return value
     }
 
+    private var attributedTypewriter: AttributedString {
+        var value = AttributedString("Rich 👨‍👩‍👧‍👦 typewriter text keeps its color, weight, and underline while it grows.")
+        value.font = .system(size: 18, weight: .bold)
+        value.foregroundColor = .indigo
+        value.underlineStyle = .single
+        return value
+    }
+
     private var playbackControls: some View {
         VStack(spacing: 8) {
             HStack {
@@ -113,6 +159,14 @@ struct SwiftUIExampleView: View {
             }
         }
         .buttonStyle(.bordered)
+    }
+
+    private var typewriterReplayButton: some View {
+        Button("Replay Typewriter") {
+            typewriterGeneration += 1
+        }
+        .buttonStyle(.bordered)
+        .frame(maxWidth: 280)
     }
 
     private func playbackButton(

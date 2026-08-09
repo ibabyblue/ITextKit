@@ -22,6 +22,16 @@ final class UIKitExampleViewController: UIViewController {
         attributedText: UIKitExampleViewController.makeAttributedMarqueeText()
     )
 
+    private let typewriter = ITextTypewriterView(
+        text: UIKitExampleViewController.plainTypewriterText,
+        configuration: .init(charactersPerSecond: 24, initialDelay: 0.35)
+    )
+
+    private let attributedTypewriter = ITextTypewriterView(
+        attributedText: UIKitExampleViewController.makeAttributedTypewriterText(),
+        configuration: .init(charactersPerSecond: 24, initialDelay: 0.35)
+    )
+
     private let settledLabel = UILabel()
 
     override func viewDidLoad() {
@@ -48,6 +58,14 @@ final class UIKitExampleViewController: UIViewController {
 
         attributedMarquee.adjustsFontForContentSizeCategory = true
 
+        typewriter.font = .preferredFont(forTextStyle: .body)
+        typewriter.textColor = .label
+        typewriter.numberOfLines = 0
+        typewriter.adjustsFontForContentSizeCategory = true
+
+        attributedTypewriter.numberOfLines = 0
+        attributedTypewriter.adjustsFontForContentSizeCategory = true
+
         settledLabel.font = .preferredFont(forTextStyle: .caption1)
         settledLabel.textColor = .secondaryLabel
         settledLabel.text = "Initial item"
@@ -62,7 +80,12 @@ final class UIKitExampleViewController: UIViewController {
             heading("Plain overflow-only marquee"),
             card(containing: marquee, color: .systemOrange),
             heading("Attributed overflow-only marquee"),
-            card(containing: attributedMarquee, color: .systemGreen)
+            card(containing: attributedMarquee, color: .systemGreen),
+            makeTypewriterReplayButton(),
+            heading("Plain typewriter"),
+            typewriterCard(containing: typewriter, color: .systemCyan),
+            heading("Attributed typewriter"),
+            typewriterCard(containing: attributedTypewriter, color: .systemIndigo)
         ])
         stack.axis = .vertical
         stack.spacing = 20
@@ -121,6 +144,16 @@ final class UIKitExampleViewController: UIViewController {
         return stack
     }
 
+    private func makeTypewriterReplayButton() -> UIView {
+        playbackButton(title: "Replay Typewriter") { [weak self] in
+            guard let self else { return }
+            typewriter.text = ""
+            attributedTypewriter.attributedText = NSAttributedString(string: "")
+            typewriter.text = Self.plainTypewriterText
+            attributedTypewriter.attributedText = Self.makeAttributedTypewriterText()
+        }
+    }
+
     private func playbackButton(title: String, action: @escaping () -> Void) -> UIButton {
         let button = UIButton(type: .system, primaryAction: UIAction(title: title) { _ in action() })
         button.configuration = .bordered()
@@ -150,6 +183,30 @@ final class UIKitExampleViewController: UIViewController {
         return card
     }
 
+    private func typewriterCard(containing content: UIView, color: UIColor) -> UIView {
+        let card = UIView()
+        card.backgroundColor = color.withAlphaComponent(0.12)
+        card.layer.cornerRadius = 16
+
+        let container = UIView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(content)
+        container.addSubview(card)
+        NSLayoutConstraint.activate([
+            card.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            card.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor),
+            card.topAnchor.constraint(equalTo: container.topAnchor),
+            card.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            card.widthAnchor.constraint(lessThanOrEqualToConstant: 280),
+            content.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            content.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+            content.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+            content.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16)
+        ])
+        return container
+    }
+
     private func heading(_ text: String) -> UILabel {
         let label = UILabel()
         label.font = .preferredFont(forTextStyle: .headline)
@@ -177,12 +234,26 @@ final class UIKitExampleViewController: UIViewController {
         return [first, second]
     }
 
+    private static let plainTypewriterText =
+        "A plain UIKit typewriter grows wider, then wraps and grows taller."
+
     private static func makeAttributedMarqueeText() -> NSAttributedString {
         NSAttributedString(
             string: "This bold green UIKit attributed marquee is underlined and moves as one native line.",
             attributes: [
                 .font: UIFont.systemFont(ofSize: 18, weight: .bold),
                 .foregroundColor: UIColor.systemGreen,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
+            ]
+        )
+    }
+
+    private static func makeAttributedTypewriterText() -> NSAttributedString {
+        NSAttributedString(
+            string: "Rich 👨‍👩‍👧‍👦 UIKit typewriter text keeps its color, weight, and underline while it grows.",
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 18, weight: .bold),
+                .foregroundColor: UIColor.systemIndigo,
                 .underlineStyle: NSUnderlineStyle.single.rawValue
             ]
         )
