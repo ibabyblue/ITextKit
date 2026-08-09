@@ -2,7 +2,7 @@
 
 All notable changes to ITextKit are documented in this file.
 
-## Unreleased
+## 0.1.0 - 2026-08-09
 
 ### Added
 
@@ -11,3 +11,5 @@ All notable changes to ITextKit are documented in this file.
 - SwiftUI `ITextMarquee` and UIKit `ITextMarqueeView` with overflow detection, seamless repeated copies, semantic right-to-left motion, and Reduce Motion static fallbacks.
 - Shared configuration and playback types with exact pause/resume and lifecycle suspension semantics.
 - Separate Core, SwiftUI, and UIKit test targets, DocC guides, and an offline example application.
+- Native rich-text input for all four controls through SwiftUI `AttributedString` and UIKit `NSAttributedString` APIs.
+- Full-attribute change detection, UIKit immutable input snapshots, native rich-text measurement, and plain-character accessibility output.

@@ -1,22 +1,28 @@
 import UIKit
 
-/// A UIKit view that automatically rotates through plain text values.
+/// A UIKit view that automatically rotates through plain or attributed text values.
 ///
 /// Two private labels render the outgoing and entering text so position, opacity, and intrinsic
 /// height can pause at exact transition progress. The view never controls ancestor constraints or
 /// calls `layoutIfNeeded()` on its superview.
 @MainActor
 public final class ITextRotatorView: UIView {
-    /// The ordered, already-localized strings displayed by the view.
+    /// The ordered, already-localized plain strings displayed by the view.
     ///
-    /// Replacing the collection resets display to the first item and starts a complete interval.
-    public var texts: [String] = [] {
-        didSet {
-            guard texts != oldValue else { return }
-            engine.updateTexts(texts)
-            applySnapshot(engine.snapshot)
-            reconcileDisplayLink()
-        }
+    /// Setting this property replaces rich content and discards its attributes. Reading it returns
+    /// the plain characters of the current rich content.
+    public var texts: [String] {
+        get { storedAttributedTexts.map(\.string) }
+        set { replaceAttributedTexts(newValue.map(NSAttributedString.init(string:))) }
+    }
+
+    /// The ordered, already-localized attributed values displayed by the view.
+    ///
+    /// Assignment takes immutable snapshots. Any content or attribute change resets display to the
+    /// first item and starts a complete interval without changing explicit playback state.
+    public var attributedTexts: [NSAttributedString] {
+        get { storedAttributedTexts.map(NSAttributedString.init(attributedString:)) }
+        set { replaceAttributedTexts(newValue) }
     }
 
     /// Shared rotation timing.
@@ -67,6 +73,9 @@ public final class ITextRotatorView: UIView {
     /// Current caller-requested playback state.
     public private(set) var playbackState: ITextPlaybackState = .playing
 
+    /// Immutable snapshots owned by the view.
+    private var storedAttributedTexts: [NSAttributedString] = []
+
     /// The last fully settled text label.
     private let currentLabel = UILabel()
 
@@ -75,7 +84,7 @@ public final class ITextRotatorView: UIView {
 
     /// Shared deterministic timing engine.
     private let engine = _ITextRotatorEngine(
-        texts: [],
+        itemCount: 0,
         configuration: ITextRotatorConfiguration.default.resolved,
         playbackState: .playing
     )
@@ -118,9 +127,26 @@ public final class ITextRotatorView: UIView {
     ) {
         self.init(frame: .zero)
         self.configuration = configuration
-        self.texts = texts
         engine.updateConfiguration(configuration.resolved)
-        engine.updateTexts(texts)
+        self.texts = texts
+        setPlaybackState(playbackState)
+    }
+
+    /// Creates a rotating text view with initial attributed content.
+    ///
+    /// - Parameters:
+    ///   - attributedTexts: Ordered, already-localized attributed values.
+    ///   - configuration: Rotation timing.
+    ///   - playbackState: Initial caller-requested playback state.
+    public convenience init(
+        attributedTexts: [NSAttributedString],
+        configuration: ITextRotatorConfiguration = .default,
+        playbackState: ITextPlaybackState = .playing
+    ) {
+        self.init(frame: .zero)
+        self.configuration = configuration
+        engine.updateConfiguration(configuration.resolved)
+        self.attributedTexts = attributedTexts
         setPlaybackState(playbackState)
     }
 
@@ -240,8 +266,9 @@ public final class ITextRotatorView: UIView {
             self?.applySnapshot(snapshot)
             self?.reconcileDisplayLink()
         }
-        engine.onTextSettled = { [weak self] index, text in
-            self?.onTextChange?(index, text)
+        engine.onItemSettled = { [weak self] index in
+            guard let self, self.storedAttributedTexts.indices.contains(index) else { return }
+            self.onTextChange?(index, self.storedAttributedTexts[index].string)
         }
         displayLink.onFrame = { [weak self] elapsed in
             self?.engine.advance(by: elapsed)
@@ -285,8 +312,8 @@ public final class ITextRotatorView: UIView {
     private func applySnapshot(_ snapshot: _ITextRotatorSnapshot) {
         self.snapshot = snapshot
         playbackState = snapshot.playbackState
-        currentLabel.text = text(at: snapshot.currentIndex)
-        nextLabel.text = snapshot.nextIndex.flatMap(text(at:))
+        currentLabel.attributedText = attributedText(at: snapshot.currentIndex)
+        nextLabel.attributedText = snapshot.nextIndex.flatMap(attributedText(at:))
         if snapshot.nextIndex == nil {
             currentLabel.alpha = 1
             currentLabel.transform = .identity
@@ -294,17 +321,37 @@ public final class ITextRotatorView: UIView {
             nextLabel.transform = .identity
             nextLabel.isHidden = true
         }
-        accessibilityLabel = currentLabel.text
+        accessibilityLabel = currentLabel.attributedText?.string
         invalidateIntrinsicContentSize()
         setNeedsLayout()
     }
 
-    /// Returns text safely for an engine-provided index.
+    /// Replaces content with immutable snapshots and restarts from the first item when changed.
+    ///
+    /// - Parameter values: Caller-owned attributed values.
+    private func replaceAttributedTexts(_ values: [NSAttributedString]) {
+        let snapshots = values.map(NSAttributedString.init(attributedString:))
+        guard !attributedTextCollectionsEqual(snapshots, storedAttributedTexts) else { return }
+        storedAttributedTexts = snapshots
+        engine.updateItemCount(snapshots.count)
+        applySnapshot(engine.snapshot)
+        reconcileDisplayLink()
+    }
+
+    /// Compares characters and every native attribute.
+    private func attributedTextCollectionsEqual(
+        _ lhs: [NSAttributedString],
+        _ rhs: [NSAttributedString]
+    ) -> Bool {
+        lhs.count == rhs.count && zip(lhs, rhs).allSatisfy { $0.isEqual(to: $1) }
+    }
+
+    /// Returns attributed text safely for an engine-provided index.
     ///
     /// - Parameter index: Requested array position.
-    /// - Returns: Text at the index, or `nil` when unavailable.
-    private func text(at index: Int) -> String? {
-        texts.indices.contains(index) ? texts[index] : nil
+    /// - Returns: Attributed text at the index, or `nil` when unavailable.
+    private func attributedText(at index: Int) -> NSAttributedString? {
+        storedAttributedTexts.indices.contains(index) ? storedAttributedTexts[index] : nil
     }
 
     /// Synchronizes public typography with both private labels.
@@ -317,8 +364,9 @@ public final class ITextRotatorView: UIView {
             label.lineBreakMode = lineBreakMode
             label.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory
         }
-        invalidateIntrinsicContentSize()
-        setNeedsLayout()
+        // UILabel can rebuild its attributed presentation when defaults change. Reassign the
+        // caller snapshot afterward so inline attributes continue to win over those defaults.
+        applySnapshot(engine.snapshot)
     }
 
     /// Sizes one label using its own text height and places its untransformed origin at the top.

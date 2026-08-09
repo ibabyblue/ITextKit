@@ -89,6 +89,78 @@ final class ITextKitUIKitAPITests: XCTestCase {
         XCTAssertEqual(view.playbackState, .stopped)
     }
 
+    func testRotatorAttributedContentUsesNativeLayoutAndPlainAccessibility() {
+        let large = NSAttributedString(
+            string: "Large rich text",
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 34, weight: .bold),
+                .foregroundColor: UIColor.systemPurple,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
+            ]
+        )
+        let view = ITextRotatorView(
+            attributedTexts: [large, NSAttributedString(string: "Next")],
+            playbackState: .paused
+        )
+        let plain = ITextRotatorView(texts: ["Large rich text"], playbackState: .paused)
+        view.font = .preferredFont(forTextStyle: .caption1)
+        view.textColor = .label
+        view.textAlignment = .center
+        view.adjustsFontForContentSizeCategory = true
+
+        XCTAssertEqual(view.texts, ["Large rich text", "Next"])
+        XCTAssertTrue(view.attributedTexts[0].isEqual(to: large))
+        XCTAssertEqual(view.accessibilityLabel, "Large rich text")
+        XCTAssertGreaterThan(view.intrinsicContentSize.height, plain.intrinsicContentSize.height)
+        let labels = view.subviews.compactMap { $0 as? UILabel }
+        XCTAssertTrue(labels[0].attributedText?.isEqual(to: large) == true)
+    }
+
+    func testRotatorStyleOnlyChangeResetsFirstItemAndPreservesPause() throws {
+        let values = [
+            NSAttributedString(string: "First", attributes: [.foregroundColor: UIColor.red]),
+            NSAttributedString(string: "Second", attributes: [.foregroundColor: UIColor.red])
+        ]
+        let view = ITextRotatorView(
+            attributedTexts: values,
+            configuration: .init(interval: 1, transitionDuration: 0),
+            playbackState: .playing
+        )
+        let engine = try XCTUnwrap(
+            Mirror(reflecting: view).descendant("engine") as? _ITextRotatorEngine
+        )
+        engine.setEnvironmentActive(true)
+        engine.advance(by: 1)
+        XCTAssertEqual(engine.snapshot.currentIndex, 1)
+
+        view.pause()
+        view.attributedTexts = values.map {
+            NSAttributedString(string: $0.string, attributes: [.foregroundColor: UIColor.blue])
+        }
+
+        XCTAssertEqual(engine.snapshot.currentIndex, 0)
+        XCTAssertEqual(view.playbackState, .paused)
+        XCTAssertEqual(view.accessibilityLabel, "First")
+    }
+
+    func testRotatorTakesImmutableSnapshotsAndPlainSetterDropsAttributes() {
+        let mutable = NSMutableAttributedString(
+            string: "Snapshot",
+            attributes: [.foregroundColor: UIColor.red]
+        )
+        let view = ITextRotatorView(attributedTexts: [mutable], playbackState: .paused)
+        mutable.addAttribute(.foregroundColor, value: UIColor.blue, range: NSRange(location: 0, length: mutable.length))
+
+        XCTAssertEqual(
+            view.attributedTexts[0].attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor,
+            .red
+        )
+
+        view.texts = ["Plain"]
+        XCTAssertEqual(view.attributedTexts[0].string, "Plain")
+        XCTAssertNil(view.attributedTexts[0].attribute(.foregroundColor, at: 0, effectiveRange: nil))
+    }
+
     func testMarqueePublicStylePlaybackAndAccessibility() {
         let view = ITextMarqueeView(
             text: "A long marquee line that should overflow this narrow viewport",
@@ -119,5 +191,60 @@ final class ITextKitUIKitAPITests: XCTestCase {
         XCTAssertEqual(view.playbackState, .playing)
         view.stop()
         XCTAssertEqual(view.playbackState, .stopped)
+    }
+
+    func testMarqueeAttributedContentUsesNativeWidthAndImmutableSnapshot() {
+        let mutable = NSMutableAttributedString(
+            string: "Wide rich marquee",
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 32, weight: .bold),
+                .kern: 3,
+                .foregroundColor: UIColor.systemBlue
+            ]
+        )
+        let view = ITextMarqueeView(attributedText: mutable, playbackState: .paused)
+        let plain = ITextMarqueeView(text: mutable.string, playbackState: .paused)
+        let originalWidth = view.intrinsicContentSize.width
+        view.font = .preferredFont(forTextStyle: .caption1)
+        view.textColor = .label
+        view.adjustsFontForContentSizeCategory = true
+        mutable.addAttribute(.font, value: UIFont.systemFont(ofSize: 8), range: NSRange(location: 0, length: mutable.length))
+
+        XCTAssertGreaterThan(originalWidth, plain.intrinsicContentSize.width)
+        XCTAssertEqual(view.intrinsicContentSize.width, originalWidth, accuracy: 0.01)
+        XCTAssertEqual(view.accessibilityLabel, "Wide rich marquee")
+        let labels = view.subviews.compactMap { $0 as? UILabel }
+        XCTAssertTrue(labels.allSatisfy { label in
+            label.attributedText.map(view.attributedText.isEqual(to:)) == true
+        })
+    }
+
+    func testMarqueeStyleOnlyChangeRestartsAndPreservesPause() throws {
+        let view = ITextMarqueeView(
+            attributedText: NSAttributedString(
+                string: "A long rich marquee that overflows",
+                attributes: [.foregroundColor: UIColor.red]
+            ),
+            configuration: .init(speed: 100, spacing: 20, initialDelay: 0),
+            playbackState: .playing
+        )
+        view.frame = CGRect(x: 0, y: 0, width: 40, height: 30)
+        view.layoutIfNeeded()
+        let engine = try XCTUnwrap(
+            Mirror(reflecting: view).descendant("engine") as? _ITextMarqueeEngine
+        )
+        engine.setEnvironmentActive(true)
+        engine.advance(by: 0.2)
+        XCTAssertGreaterThan(engine.snapshot.offset, 0)
+
+        view.pause()
+        view.attributedText = NSAttributedString(
+            string: view.text,
+            attributes: [.foregroundColor: UIColor.blue]
+        )
+
+        XCTAssertEqual(engine.snapshot.offset, 0)
+        XCTAssertEqual(view.playbackState, .paused)
+        XCTAssertEqual(view.accessibilityLabel, view.text)
     }
 }

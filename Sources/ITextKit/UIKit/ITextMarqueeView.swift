@@ -1,6 +1,6 @@
 import UIKit
 
-/// A UIKit view that moves one overflowing line of text in a seamless loop.
+/// A UIKit view that moves one overflowing line of plain or attributed text in a seamless loop.
 ///
 /// Two private labels provide continuous repetition without becoming duplicate accessibility
 /// elements. Text that fits, stopped playback, zero speed, and Reduce Motion all use one static,
@@ -8,14 +8,21 @@ import UIKit
 @MainActor
 public final class ITextMarqueeView: UIView {
     /// The already-localized plain text displayed by the view.
-    public var text: String = "" {
-        didSet {
-            guard text != oldValue else { return }
-            synchronizeLabelContent()
-            engine.restart()
-            applySnapshot(engine.snapshot)
-            setNeedsLayout()
-        }
+    ///
+    /// Setting this property replaces rich content and discards its attributes. Reading it returns
+    /// the plain characters of the current rich content.
+    public var text: String {
+        get { storedAttributedText.string }
+        set { replaceAttributedText(NSAttributedString(string: newValue)) }
+    }
+
+    /// The already-localized attributed text displayed by the view.
+    ///
+    /// Assignment takes an immutable snapshot. Any content or attribute change returns motion to
+    /// semantic leading and remeasures without changing explicit playback state.
+    public var attributedText: NSAttributedString {
+        get { NSAttributedString(attributedString: storedAttributedText) }
+        set { replaceAttributedText(newValue) }
     }
 
     /// Shared marquee speed, copy spacing, and initial delay.
@@ -51,6 +58,9 @@ public final class ITextMarqueeView: UIView {
 
     /// Current caller-requested playback state.
     public private(set) var playbackState: ITextPlaybackState = .playing
+
+    /// Immutable snapshot owned by the view.
+    private var storedAttributedText = NSAttributedString(string: "")
 
     /// The visible or first moving text copy.
     private let primaryLabel = UILabel()
@@ -104,10 +114,26 @@ public final class ITextMarqueeView: UIView {
     ) {
         self.init(frame: .zero)
         self.configuration = configuration
-        self.text = text
         engine.updateConfiguration(configuration.resolved)
-        synchronizeLabelContent()
-        engine.restart()
+        self.text = text
+        setPlaybackState(playbackState)
+    }
+
+    /// Creates a marquee view with initial attributed content.
+    ///
+    /// - Parameters:
+    ///   - attributedText: An already-localized attributed value with single-line semantics.
+    ///   - configuration: Marquee speed, spacing, and initial delay.
+    ///   - playbackState: Initial caller-requested playback state.
+    public convenience init(
+        attributedText: NSAttributedString,
+        configuration: ITextMarqueeConfiguration = .default,
+        playbackState: ITextPlaybackState = .playing
+    ) {
+        self.init(frame: .zero)
+        self.configuration = configuration
+        engine.updateConfiguration(configuration.resolved)
+        self.attributedText = attributedText
         setPlaybackState(playbackState)
     }
 
@@ -177,7 +203,7 @@ public final class ITextMarqueeView: UIView {
         } else {
             layoutStaticLabel()
         }
-        accessibilityLabel = text
+        accessibilityLabel = storedAttributedText.string
         reconcileDisplayLink()
     }
 
@@ -268,11 +294,22 @@ public final class ITextMarqueeView: UIView {
         setNeedsLayout()
     }
 
-    /// Synchronizes plain text between both private copies.
+    /// Replaces content with an immutable snapshot and restarts geometry-dependent motion.
+    private func replaceAttributedText(_ value: NSAttributedString) {
+        let snapshot = NSAttributedString(attributedString: value)
+        guard !snapshot.isEqual(to: storedAttributedText) else { return }
+        storedAttributedText = snapshot
+        synchronizeLabelContent()
+        engine.restart()
+        applySnapshot(engine.snapshot)
+        setNeedsLayout()
+    }
+
+    /// Synchronizes attributed text between both private copies.
     private func synchronizeLabelContent() {
-        primaryLabel.text = text
-        repeatedLabel.text = text
-        accessibilityLabel = text
+        primaryLabel.attributedText = storedAttributedText
+        repeatedLabel.attributedText = storedAttributedText
+        accessibilityLabel = storedAttributedText.string
         invalidateIntrinsicContentSize()
     }
 
@@ -286,17 +323,22 @@ public final class ITextMarqueeView: UIView {
             label.textAlignment = textAlignment
             label.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory
         }
+        // UILabel can rebuild its attributed presentation when defaults change. Reassign the
+        // caller snapshot afterward so inline attributes continue to win over those defaults.
+        synchronizeLabelContent()
         if restartMotion {
             engine.restart()
         }
-        invalidateIntrinsicContentSize()
         setNeedsLayout()
     }
 
     /// Measures the complete untruncated line independently from the labels' current frames.
     private var measuredTextSize: CGSize {
-        guard !text.isEmpty else { return .zero }
-        let size = (text as NSString).size(withAttributes: [.font: primaryLabel.font as Any])
+        guard storedAttributedText.length > 0 else { return .zero }
+        let size = primaryLabel.sizeThatFits(CGSize(
+            width: CGFloat.greatestFiniteMagnitude,
+            height: CGFloat.greatestFiniteMagnitude
+        ))
         return CGSize(width: ceil(size.width), height: ceil(size.height))
     }
 

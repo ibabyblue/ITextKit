@@ -1,7 +1,7 @@
 import Combine
 import SwiftUI
 
-/// A SwiftUI view that automatically rotates through plain text values.
+/// A SwiftUI view that automatically rotates through plain or attributed text values.
 ///
 /// The current text moves upward while fading out and the next text enters from below. The view's
 /// ideal height follows the currently rendered text; while transitioning, both texts participate
@@ -9,8 +9,8 @@ import SwiftUI
 /// cross-fade while preserving automatic rotation.
 @MainActor
 public struct ITextRotator: View {
-    /// The ordered localized text supplied by the caller.
-    private let texts: [String]
+    /// The ordered localized attributed text supplied by the caller.
+    private let attributedTexts: [AttributedString]
 
     /// Shared timing values.
     private let configuration: ITextRotatorConfiguration
@@ -43,11 +43,32 @@ public struct ITextRotator: View {
         configuration: ITextRotatorConfiguration = .default,
         playbackState: ITextPlaybackState = .playing
     ) {
-        self.texts = texts
+        self.init(
+            attributedTexts: texts.map(AttributedString.init),
+            configuration: configuration,
+            playbackState: playbackState
+        )
+    }
+
+    /// Creates an automatically rotating attributed-text view.
+    ///
+    /// Inline attributes take precedence over view-level text modifiers. Empty input renders
+    /// nothing and a single value remains static.
+    ///
+    /// - Parameters:
+    ///   - attributedTexts: Ordered, already-localized attributed values.
+    ///   - configuration: Rotation timing. Defaults to ``ITextRotatorConfiguration/default``.
+    ///   - playbackState: Caller-requested playback state.
+    public init(
+        attributedTexts: [AttributedString],
+        configuration: ITextRotatorConfiguration = .default,
+        playbackState: ITextPlaybackState = .playing
+    ) {
+        self.attributedTexts = attributedTexts
         self.configuration = configuration
         self.playbackState = playbackState
         _model = StateObject(wrappedValue: _ITextRotatorObservable(
-            texts: texts,
+            attributedTexts: attributedTexts,
             configuration: configuration,
             playbackState: playbackState
         ))
@@ -61,7 +82,7 @@ public struct ITextRotator: View {
         )
 
         ZStack(alignment: .topLeading) {
-            if let currentText = model.currentText {
+            if let currentText = model.currentAttributedText {
                 Text(currentText)
                     .fixedSize(horizontal: false, vertical: true)
                     .opacity(transition.outgoing.opacity)
@@ -70,7 +91,7 @@ public struct ITextRotator: View {
                     ))
             }
 
-            if let nextText = model.nextText {
+            if let nextText = model.nextAttributedText {
                 Text(nextText)
                     .fixedSize(horizontal: false, vertical: true)
                     .opacity(transition.incoming.opacity)
@@ -80,8 +101,9 @@ public struct ITextRotator: View {
             }
         }
         .clipped()
+        .allowsHitTesting(false)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(model.currentText ?? "")
+        .accessibilityLabel(model.currentPlainText)
         .onAppear {
             synchronizeModel()
             model.setVisible(true, sceneIsActive: scenePhase == .active)
@@ -92,8 +114,8 @@ public struct ITextRotator: View {
         .onChange(of: scenePhase) { phase in
             model.setSceneActive(phase == .active)
         }
-        .onChange(of: texts) { value in
-            model.updateTexts(value)
+        .onChange(of: attributedTexts) { value in
+            model.updateAttributedTexts(value)
         }
         .onChange(of: configuration) { value in
             model.updateConfiguration(value)
@@ -120,7 +142,7 @@ public struct ITextRotator: View {
 
     /// Synchronizes value-semantic SwiftUI inputs with the long-lived model.
     private func synchronizeModel() {
-        model.updateTexts(texts)
+        model.updateAttributedTexts(attributedTexts)
         model.updateConfiguration(configuration)
         model.setPlaybackState(playbackState)
         model.onTextChange = onTextChange
@@ -159,6 +181,9 @@ private final class _ITextRotatorObservable: ObservableObject {
     /// Framework-independent timing engine.
     private let engine: _ITextRotatorEngine
 
+    /// Current renderable content, owned by the SwiftUI adapter rather than the timing engine.
+    private var attributedTexts: [AttributedString]
+
     /// Display-link clock stopped whenever time cannot advance.
     private let displayLink = _ITextDisplayLinkDriver()
 
@@ -170,50 +195,59 @@ private final class _ITextRotatorObservable: ObservableObject {
 
     /// Creates a SwiftUI rotator model.
     init(
-        texts: [String],
+        attributedTexts: [AttributedString],
         configuration: ITextRotatorConfiguration,
         playbackState: ITextPlaybackState
     ) {
         let engine = _ITextRotatorEngine(
-            texts: texts,
+            itemCount: attributedTexts.count,
             configuration: configuration.resolved,
             playbackState: playbackState
         )
         self.engine = engine
+        self.attributedTexts = attributedTexts
         self.snapshot = engine.snapshot
 
         engine.onSnapshotChanged = { [weak self] snapshot in
             self?.snapshot = snapshot
             self?.reconcileDisplayLink()
         }
-        engine.onTextSettled = { [weak self] index, text in
-            self?.onTextChange?(index, text)
+        engine.onItemSettled = { [weak self] index in
+            guard let self, self.attributedTexts.indices.contains(index) else { return }
+            self.onTextChange?(index, String(self.attributedTexts[index].characters))
         }
         displayLink.onFrame = { [weak self] elapsed in
             self?.engine.advance(by: elapsed)
         }
     }
 
-    /// The last fully settled text, or `nil` for empty input.
-    var currentText: String? {
-        guard !engine.texts.isEmpty else { return nil }
-        return engine.texts[snapshot.currentIndex]
+    /// The last fully settled attributed text, or `nil` for empty input.
+    var currentAttributedText: AttributedString? {
+        guard attributedTexts.indices.contains(snapshot.currentIndex) else { return nil }
+        return attributedTexts[snapshot.currentIndex]
     }
 
-    /// The entering text during a transition.
-    var nextText: String? {
-        guard let index = snapshot.nextIndex, engine.texts.indices.contains(index) else {
+    /// The entering attributed text during a transition.
+    var nextAttributedText: AttributedString? {
+        guard let index = snapshot.nextIndex, attributedTexts.indices.contains(index) else {
             return nil
         }
-        return engine.texts[index]
+        return attributedTexts[index]
+    }
+
+    /// Plain characters exposed as the single accessibility element.
+    var currentPlainText: String {
+        currentAttributedText.map { String($0.characters) } ?? ""
     }
 
     /// Linear transition progress projected by the shared renderer presentation.
     var transitionProgress: Double { snapshot.progress }
 
-    /// Replaces text values and restarts at the first item when needed.
-    func updateTexts(_ texts: [String]) {
-        engine.updateTexts(texts)
+    /// Replaces attributed values and restarts at the first item for any content or style change.
+    func updateAttributedTexts(_ attributedTexts: [AttributedString]) {
+        guard attributedTexts != self.attributedTexts else { return }
+        self.attributedTexts = attributedTexts
+        engine.updateItemCount(attributedTexts.count)
         snapshot = engine.snapshot
         reconcileDisplayLink()
     }

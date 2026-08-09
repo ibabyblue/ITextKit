@@ -4,14 +4,22 @@ import UIKit
 final class UIKitExampleViewController: UIViewController {
     private let rotator = ITextRotatorView(
         texts: [
-            "A short UIKit message",
-            "This longer UIKit message demonstrates intrinsic height following the current multiline text.",
-            "Compact again"
+            "Short UIKit message",
+            "Loading in UIKit",
+            "UIKit is ready"
         ]
     )
 
     private let marquee = ITextMarqueeView(
         text: "The UIKit marquee waits at leading, then loops this overflowing message seamlessly."
+    )
+
+    private let attributedRotator = ITextRotatorView(
+        attributedTexts: UIKitExampleViewController.makeAttributedRotatorMessages()
+    )
+
+    private let attributedMarquee = ITextMarqueeView(
+        attributedText: UIKitExampleViewController.makeAttributedMarqueeText()
     )
 
     private let settledLabel = UILabel()
@@ -25,7 +33,7 @@ final class UIKitExampleViewController: UIViewController {
     private func configureContent() {
         rotator.font = .preferredFont(forTextStyle: .title3)
         rotator.textColor = .label
-        rotator.numberOfLines = 0
+        rotator.numberOfLines = 1
         rotator.adjustsFontForContentSizeCategory = true
         rotator.onTextChange = { [weak self] index, _ in
             self?.settledLabel.text = "Settled index: \(index)"
@@ -35,17 +43,26 @@ final class UIKitExampleViewController: UIViewController {
         marquee.textColor = .label
         marquee.adjustsFontForContentSizeCategory = true
 
+        attributedRotator.numberOfLines = 1
+        attributedRotator.adjustsFontForContentSizeCategory = true
+
+        attributedMarquee.adjustsFontForContentSizeCategory = true
+
         settledLabel.font = .preferredFont(forTextStyle: .caption1)
         settledLabel.textColor = .secondaryLabel
         settledLabel.text = "Initial item"
 
         let stack = UIStackView(arrangedSubviews: [
-            heading("Variable-height rotator"),
+            heading("Plain rotator"),
             card(containing: rotator, color: .systemBlue),
             settledLabel,
+            heading("Attributed rotator"),
+            card(containing: attributedRotator, color: .systemPurple),
             makeControls(),
-            heading("Overflow-only marquee"),
-            card(containing: marquee, color: .systemOrange)
+            heading("Plain overflow-only marquee"),
+            card(containing: marquee, color: .systemOrange),
+            heading("Attributed overflow-only marquee"),
+            card(containing: attributedMarquee, color: .systemGreen)
         ])
         stack.axis = .vertical
         stack.spacing = 20
@@ -74,18 +91,26 @@ final class UIKitExampleViewController: UIViewController {
         let start = playbackButton(title: "Start") { [weak self] in
             self?.rotator.start()
             self?.marquee.start()
+            self?.attributedRotator.start()
+            self?.attributedMarquee.start()
         }
         let pause = playbackButton(title: "Pause") { [weak self] in
             self?.rotator.pause()
             self?.marquee.pause()
+            self?.attributedRotator.pause()
+            self?.attributedMarquee.pause()
         }
         let resume = playbackButton(title: "Resume") { [weak self] in
             self?.rotator.resume()
             self?.marquee.resume()
+            self?.attributedRotator.resume()
+            self?.attributedMarquee.resume()
         }
         let stop = playbackButton(title: "Stop") { [weak self] in
             self?.rotator.stop()
             self?.marquee.stop()
+            self?.attributedRotator.stop()
+            self?.attributedMarquee.stop()
         }
 
         let firstRow = controlRow([start, pause])
@@ -131,5 +156,35 @@ final class UIKitExampleViewController: UIViewController {
         label.adjustsFontForContentSizeCategory = true
         label.text = text
         return label
+    }
+
+    private static func makeAttributedRotatorMessages() -> [NSAttributedString] {
+        let first = NSAttributedString(
+            string: "Bold purple UIKit text",
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 22, weight: .bold),
+                .foregroundColor: UIColor.systemPurple
+            ]
+        )
+        let second = NSAttributedString(
+            string: "Underlined UIKit status",
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 28, weight: .semibold),
+                .foregroundColor: UIColor.systemIndigo,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
+            ]
+        )
+        return [first, second]
+    }
+
+    private static func makeAttributedMarqueeText() -> NSAttributedString {
+        NSAttributedString(
+            string: "This bold green UIKit attributed marquee is underlined and moves as one native line.",
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 18, weight: .bold),
+                .foregroundColor: UIColor.systemGreen,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
+            ]
+        )
     }
 }

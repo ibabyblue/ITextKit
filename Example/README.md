@@ -2,10 +2,10 @@
 
 This offline iOS application demonstrates both public API families from the same local `ITextKit` package product.
 
-- **SwiftUI** uses `ITextRotator` and `ITextMarquee` with declarative `ITextPlaybackState`.
-- **UIKit** uses `ITextRotatorView` and `ITextMarqueeView`, including `start()`, `pause()`, `resume()`, and `stop()`.
+- **SwiftUI** shows plain `String` and rich `AttributedString` input with declarative `ITextPlaybackState`.
+- **UIKit** shows plain `String` and rich `NSAttributedString` input, including `start()`, `pause()`, `resume()`, and `stop()`.
 
-The rotator examples deliberately mix short and multiline messages so intrinsic height changes are visible.
+All rotator examples use short single-line messages. Rich examples still demonstrate font, color, bold, and underline attributes without wrapping.
 
 ## Generate and Run
 

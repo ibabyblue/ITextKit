@@ -1,15 +1,15 @@
 import Combine
 import SwiftUI
 
-/// A SwiftUI view that moves one overflowing line of text in a seamless loop.
+/// A SwiftUI view that moves one overflowing line of plain or attributed text in a seamless loop.
 ///
 /// Text that fits remains static. Overflowing text waits at semantic leading, then two identical
 /// copies move at a constant points-per-second speed. Reduce Motion renders one static,
 /// tail-truncated accessibility element.
 @MainActor
 public struct ITextMarquee: View {
-    /// The already-localized plain text supplied by the caller.
-    private let text: String
+    /// The already-localized attributed text supplied by the caller.
+    private let attributedText: AttributedString
 
     /// Shared marquee motion values.
     private let configuration: ITextMarqueeConfiguration
@@ -41,11 +41,32 @@ public struct ITextMarquee: View {
         configuration: ITextMarqueeConfiguration = .default,
         playbackState: ITextPlaybackState = .playing
     ) {
-        self.text = text
+        self.init(
+            attributedText: AttributedString(text),
+            configuration: configuration,
+            playbackState: playbackState
+        )
+    }
+
+    /// Creates a seamless marquee for one line of attributed text.
+    ///
+    /// Inline attributes take precedence over view-level text modifiers. The caller should supply
+    /// semantic single-line content; newline handling follows native one-line text rendering.
+    ///
+    /// - Parameters:
+    ///   - attributedText: An already-localized attributed value.
+    ///   - configuration: Speed, copy spacing, and initial delay.
+    ///   - playbackState: Caller-requested playback state.
+    public init(
+        attributedText: AttributedString,
+        configuration: ITextMarqueeConfiguration = .default,
+        playbackState: ITextPlaybackState = .playing
+    ) {
+        self.attributedText = attributedText
         self.configuration = configuration
         self.playbackState = playbackState
         _model = StateObject(wrappedValue: _ITextMarqueeObservable(
-            text: text,
+            attributedText: attributedText,
             configuration: configuration,
             playbackState: playbackState
         ))
@@ -53,7 +74,7 @@ public struct ITextMarquee: View {
 
     /// Static fallback, hidden measurement, and optional repeated moving copies.
     public var body: some View {
-        Text(text)
+        Text(attributedText)
             .lineLimit(1)
             .truncationMode(.tail)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -81,8 +102,9 @@ public struct ITextMarquee: View {
                 }
             }
             .clipped()
+            .allowsHitTesting(false)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(text)
+            .accessibilityLabel(plainText)
             .onPreferenceChange(_ITextMarqueeContentWidthPreferenceKey.self) { width in
                 model.updateContentWidth(width)
             }
@@ -105,8 +127,8 @@ public struct ITextMarquee: View {
             .onChange(of: layoutDirection) { _ in
                 model.restartForLayoutDirectionChange()
             }
-            .onChange(of: text) { value in
-                model.updateText(value)
+            .onChange(of: attributedText) { value in
+                model.updateAttributedText(value)
             }
             .onChange(of: configuration) { value in
                 model.updateConfiguration(value)
@@ -118,7 +140,7 @@ public struct ITextMarquee: View {
 
     /// A hidden, unconstrained copy used only to measure full text width.
     private var measurementText: some View {
-        Text(text)
+        Text(attributedText)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
             .hidden()
@@ -135,7 +157,7 @@ public struct ITextMarquee: View {
 
     /// One untruncated moving text copy.
     private var movingText: some View {
-        Text(text)
+        Text(attributedText)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
     }
@@ -153,9 +175,14 @@ public struct ITextMarquee: View {
         layoutDirection == .rightToLeft ? model.snapshot.offset : -model.snapshot.offset
     }
 
+    /// Plain characters exposed as the single accessibility element.
+    private var plainText: String {
+        String(attributedText.characters)
+    }
+
     /// Synchronizes value-semantic SwiftUI inputs with the long-lived model.
     private func synchronizeModel() {
-        model.updateText(text)
+        model.updateAttributedText(attributedText)
         model.updateConfiguration(configuration)
         model.setPlaybackState(playbackState)
         model.setMotionAllowed(!reduceMotion)
@@ -196,8 +223,8 @@ private final class _ITextMarqueeObservable: ObservableObject {
     /// Display-link clock stopped whenever time cannot advance.
     private let displayLink = _ITextDisplayLinkDriver()
 
-    /// Last text used to determine whether motion should restart.
-    private var text: String
+    /// Last attributed value used to determine whether motion should restart.
+    private var attributedText: AttributedString
 
     /// Latest measured content width.
     private var contentWidth: CGFloat = 0
@@ -213,7 +240,7 @@ private final class _ITextMarqueeObservable: ObservableObject {
 
     /// Creates a SwiftUI marquee model.
     init(
-        text: String,
+        attributedText: AttributedString,
         configuration: ITextMarqueeConfiguration,
         playbackState: ITextPlaybackState
     ) {
@@ -222,7 +249,7 @@ private final class _ITextMarqueeObservable: ObservableObject {
             playbackState: playbackState
         )
         self.engine = engine
-        self.text = text
+        self.attributedText = attributedText
         self.snapshot = engine.snapshot
 
         engine.onSnapshotChanged = { [weak self] snapshot in
@@ -234,10 +261,10 @@ private final class _ITextMarqueeObservable: ObservableObject {
         }
     }
 
-    /// Restarts when the displayed plain text changes.
-    func updateText(_ text: String) {
-        guard text != self.text else { return }
-        self.text = text
+    /// Restarts for any displayed content or attribute change.
+    func updateAttributedText(_ attributedText: AttributedString) {
+        guard attributedText != self.attributedText else { return }
+        self.attributedText = attributedText
         engine.restart()
         snapshot = engine.snapshot
         reconcileDisplayLink()

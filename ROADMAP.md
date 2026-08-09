@@ -1,11 +1,10 @@
 # Roadmap
 
-ITextKit currently focuses on plain-text rotation and marquee movement. Planned capabilities are intentionally listed here instead of being exposed as placeholder APIs.
+ITextKit currently provides plain and attributed rotation and marquee movement. Planned capabilities are intentionally listed here instead of being exposed as placeholder APIs.
 
 ## Planned
 
 - Markdown rendering and motion composition
-- Rich-text and attributed-string inputs
 - Typewriter presentation
 - Migration of the existing IShimmerText behavior directly into ITextKit
 

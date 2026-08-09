@@ -1,7 +1,7 @@
 import XCTest
 
 final class ITextKitExampleUITests: XCTestCase {
-    func testSwiftUIRotatorMovesFromShortToTallerText() {
+    func testSwiftUIRotatorUsesSingleLineMessages() {
         let app = XCUIApplication()
         app.launch()
 
@@ -12,17 +12,24 @@ final class ITextKitExampleUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Pause"].exists)
         XCTAssertTrue(app.buttons["Resume"].exists)
         XCTAssertTrue(app.buttons["Stop"].exists)
+        XCTAssertTrue(app.staticTexts["Attributed rotator"].exists)
+        XCTAssertTrue(app.staticTexts["Attributed overflow-only marquee"].exists)
 
         app.buttons["Pause"].tap()
         app.buttons["Resume"].tap()
 
-        let longText = app.staticTexts[
-            "The rotator grows while this longer message wraps naturally across multiple lines."
-        ]
-        XCTAssertTrue(longText.waitForExistence(timeout: 5))
-        XCTAssertGreaterThan(longText.frame.height, shortHeight)
+        let nextText = app.staticTexts["Loading your space"]
+        XCTAssertTrue(nextText.waitForExistence(timeout: 5))
+        XCTAssertEqual(nextText.frame.height, shortHeight, accuracy: 1)
 
         keepScreenshot(of: app, named: "SwiftUI Example")
+
+        app.swipeUp()
+        let richMarquee = app.staticTexts[
+            "This bold green attributed marquee includes an underlined visual phrase and keeps moving as one line."
+        ]
+        XCTAssertTrue(richMarquee.waitForExistence(timeout: 2))
+        keepScreenshot(of: app, named: "SwiftUI Attributed Marquee")
     }
 
     func testUIKitTabContainsNativeControls() {
@@ -30,7 +37,9 @@ final class ITextKitExampleUITests: XCTestCase {
         app.launch()
         app.tabBars.buttons["UIKit"].tap()
 
-        XCTAssertTrue(app.staticTexts["Variable-height rotator"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Plain rotator"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Attributed rotator"].exists)
+        XCTAssertTrue(app.staticTexts["Attributed overflow-only marquee"].exists)
         XCTAssertTrue(app.buttons["Start"].exists)
         XCTAssertTrue(app.buttons["Pause"].exists)
         XCTAssertTrue(app.buttons["Resume"].exists)
@@ -42,6 +51,13 @@ final class ITextKitExampleUITests: XCTestCase {
         XCTAssertTrue(marquee.exists)
 
         keepScreenshot(of: app, named: "UIKit Example")
+
+        app.swipeUp()
+        let richMarquee = app.otherElements[
+            "This bold green UIKit attributed marquee is underlined and moves as one native line."
+        ]
+        XCTAssertTrue(richMarquee.waitForExistence(timeout: 2))
+        keepScreenshot(of: app, named: "UIKit Attributed Marquee")
     }
 
     private func keepScreenshot(of app: XCUIApplication, named name: String) {

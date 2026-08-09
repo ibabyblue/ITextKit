@@ -1,9 +1,10 @@
 # ITextKit
 
-Plain-text motion controls for SwiftUI and UIKit, delivered as one Swift Package product and one import.
+Native text motion controls for SwiftUI and UIKit, delivered as one Swift Package product and one import.
 
 ![iOS 15+](https://img.shields.io/badge/iOS-15%2B-blue)
 ![Swift 5.10+](https://img.shields.io/badge/Swift-5.10%2B-orange)
+![Release 0.1.0](https://img.shields.io/badge/release-0.1.0-purple)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -13,6 +14,7 @@ ITextKit is a UI component library for text presentation. It is not a wrapper ar
 
 - `ITextRotator` and `ITextRotatorView` rotate through variable-height text with an upward fade
 - `ITextMarquee` and `ITextMarqueeView` move one overflowing line in a seamless loop
+- Plain `String` APIs plus native `AttributedString` and `NSAttributedString` input
 - One package product and one module: `import ITextKit` in SwiftUI, UIKit, or mixed targets
 - Declarative SwiftUI playback and imperative UIKit playback
 - Exact pause/resume for remaining delays, transition progress, height, and marquee offset
@@ -36,7 +38,7 @@ For a `Package.swift` dependency:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ibabyblue/ITextKit.git", branch: "main")
+    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.1.0")
 ]
 ```
 
@@ -61,7 +63,7 @@ The module contains both SwiftUI and UIKit public APIs. Importing it does not fo
 
 ## Text Rotator
 
-The rotator accepts caller-localized `[String]` values. Empty input renders nothing. One value stays static. Multiple values cycle indefinitely, including the last-to-first transition. Duplicate strings are valid independent items.
+The rotator accepts caller-localized plain or attributed values. Empty input renders nothing. One value stays static. Multiple values cycle indefinitely, including the last-to-first transition. Duplicate values are valid independent items.
 
 ### SwiftUI
 
@@ -120,9 +122,45 @@ rotator.start()
 
 `ITextRotatorView` invalidates its intrinsic content size as presentation changes. It never changes ancestor constraints and never calls `layoutIfNeeded()` on an ancestor; the owning layout decides how to react.
 
+## Attributed Text
+
+Use explicit rich-input labels so plain and attributed call sites remain unambiguous:
+
+```swift
+// SwiftUI
+var status = AttributedString("Important status")
+status.font = .headline.bold()
+status.foregroundColor = .purple
+status.underlineStyle = .single
+
+let rotator = ITextRotator(attributedTexts: [status])
+let marquee = ITextMarquee(attributedText: status)
+```
+
+```swift
+// UIKit
+let status = NSAttributedString(
+    string: "Important status",
+    attributes: [
+        .font: UIFont.preferredFont(forTextStyle: .headline),
+        .foregroundColor: UIColor.systemPurple,
+        .underlineStyle: NSUnderlineStyle.single.rawValue
+    ]
+)
+
+let rotator = ITextRotatorView(attributedTexts: [status])
+let marquee = ITextMarqueeView(attributedText: status)
+```
+
+The shared inline visual contract covers font (including size and weight), color, kern, underline, strikethrough, and baseline attributes. UIKit also honors native `NSParagraphStyle`; on iOS 15 SwiftUI paragraph layout remains view-level through modifiers such as `multilineTextAlignment`. Inline attributes win over view-level defaults such as `font` and `textColor`. Other native or custom attributes are passed to the platform renderer without an ITextKit rendering guarantee. Attachments are not a dedicated feature, and link interaction is intentionally unavailable because motion controls are noninteractive.
+
+UIKit takes immutable copies on assignment. `texts`/`text` and `attributedTexts`/`attributedText` are two views of the same current content: assigning plain text drops attributes, while reading plain text returns stripped characters. A style-only rich-text change resets the control just like a character change and preserves the explicit playing, paused, or stopped state.
+
+SwiftUI relative fonts and UIKit preferred fonts without explicit per-range overrides follow each framework's Dynamic Type behavior. Explicit `UIFont` runs remain caller-owned. The settled callback continues to return `(Int, String)`; use its index to retrieve the original rich value when needed.
+
 ## Text Marquee
 
-The marquee accepts one caller-localized `String` and always renders a single line. Text that fits remains static. Overflowing text waits at semantic leading for one second by default, then uses two inaccessible copies for a seamless loop.
+The marquee accepts one caller-localized plain or attributed value and always renders a single line. Text that fits remains static. Overflowing text waits at semantic leading for one second by default, then uses two inaccessible copies for a seamless loop. Supply semantic single-line content; embedded newlines follow native one-line label behavior and are not rewritten by ITextKit.
 
 ### SwiftUI
 
@@ -165,7 +203,7 @@ Leaving a window, disappearing, or moving to an inactive application scene suspe
 ## Accessibility and Motion
 
 - Internal transition and repeated-copy labels are hidden from accessibility
-- VoiceOver sees only the current rotator text or the real marquee string
+- VoiceOver sees only the current rotator characters or the real marquee characters, without attributes
 - Automatic rotation does not post announcements
 - Reduce Motion turns rotator movement into a cross-fade
 - Reduce Motion stops marquee movement and shows one tail-truncated line
@@ -187,6 +225,7 @@ Public configuration values remain the values supplied by the caller. Renderers 
 - [DocC overview](Sources/ITextKit/Documentation.docc/ITextKit.md)
 - [Rotator guide](Sources/ITextKit/Documentation.docc/TextRotator.md)
 - [Marquee guide](Sources/ITextKit/Documentation.docc/TextMarquee.md)
+- [Attributed text contract](Sources/ITextKit/Documentation.docc/AttributedText.md)
 - [Playback and lifecycle](Sources/ITextKit/Documentation.docc/PlaybackAndLifecycle.md)
 - [Offline SwiftUI and UIKit example](Example/README.md)
 - [Roadmap](ROADMAP.md)

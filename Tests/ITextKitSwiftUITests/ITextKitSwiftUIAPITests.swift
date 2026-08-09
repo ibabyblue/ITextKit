@@ -18,7 +18,27 @@ final class ITextKitSwiftUIAPITests: XCTestCase {
             playbackState: .stopped
         )
 
+        var richRotatorText = AttributedString("Rich rotator")
+        richRotatorText.font = .system(size: 24, weight: .bold)
+        richRotatorText.foregroundColor = .purple
+        richRotatorText.underlineStyle = .single
+        let richRotator = ITextRotator(
+            attributedTexts: [richRotatorText, AttributedString("Next")],
+            playbackState: .paused
+        )
+        .onTextRotatorChange { _, _ in }
+
+        var richMarqueeText = AttributedString("Rich marquee")
+        richMarqueeText.font = .headline
+        richMarqueeText.foregroundColor = .blue
+        let richMarquee = ITextMarquee(
+            attributedText: richMarqueeText,
+            playbackState: .stopped
+        )
+
         _ = rotator
         _ = marquee
+        _ = richRotator
+        _ = richMarquee
     }
 }

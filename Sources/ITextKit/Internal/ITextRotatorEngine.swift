@@ -21,11 +21,11 @@ final class _ITextRotatorEngine {
     /// Emits presentation changes, including display-link progress updates.
     var onSnapshotChanged: ((_ITextRotatorSnapshot) -> Void)?
 
-    /// Emits only after a new text finishes settling.
-    var onTextSettled: ((Int, String) -> Void)?
+    /// Emits only after a new item finishes settling.
+    var onItemSettled: ((Int) -> Void)?
 
-    /// The ordered plain-text values being rotated.
-    private(set) var texts: [String]
+    /// The number of ordered items being rotated.
+    private(set) var itemCount: Int
 
     /// The effective timing values.
     private(set) var configuration: _ITextRotatorResolvedConfiguration
@@ -51,15 +51,15 @@ final class _ITextRotatorEngine {
     /// Creates a rotator timing engine.
     ///
     /// - Parameters:
-    ///   - texts: Ordered text values.
+    ///   - itemCount: Number of ordered items.
     ///   - configuration: Normalized timing configuration.
     ///   - playbackState: Initial caller-requested playback state.
     init(
-        texts: [String],
+        itemCount: Int,
         configuration: _ITextRotatorResolvedConfiguration,
         playbackState: ITextPlaybackState
     ) {
-        self.texts = texts
+        self.itemCount = max(itemCount, 0)
         self.configuration = configuration
         self.playbackState = playbackState
         self.remainingInterval = configuration.interval
@@ -75,7 +75,7 @@ final class _ITextRotatorEngine {
             progress = 0
         }
         return _ITextRotatorSnapshot(
-            currentIndex: texts.isEmpty ? 0 : min(currentIndex, texts.count - 1),
+            currentIndex: itemCount == 0 ? 0 : min(currentIndex, itemCount - 1),
             nextIndex: nextIndex,
             progress: progress,
             playbackState: playbackState
@@ -86,16 +86,15 @@ final class _ITextRotatorEngine {
     var shouldAdvance: Bool {
         playbackState == .playing
             && isEnvironmentActive
-            && texts.count > 1
+            && itemCount > 1
             && configuration.interval > 0
     }
 
-    /// Replaces text data and resets to the first stable item when values change.
+    /// Replaces the item count and resets to the first stable item.
     ///
-    /// - Parameter newTexts: The latest ordered text collection.
-    func updateTexts(_ newTexts: [String]) {
-        guard newTexts != texts else { return }
-        texts = newTexts
+    /// - Parameter newItemCount: The latest nonnegative item count.
+    func updateItemCount(_ newItemCount: Int) {
+        itemCount = max(newItemCount, 0)
         resetToFirstItem()
         emitSnapshot()
     }
@@ -180,8 +179,8 @@ final class _ITextRotatorEngine {
 
     /// Begins the next cyclic transition.
     private func beginTransition() {
-        guard texts.count > 1 else { return }
-        nextIndex = (currentIndex + 1) % texts.count
+        guard itemCount > 1 else { return }
+        nextIndex = (currentIndex + 1) % itemCount
         transitionElapsed = 0
         emitSnapshot()
     }
@@ -194,7 +193,7 @@ final class _ITextRotatorEngine {
         transitionElapsed = 0
         remainingInterval = configuration.interval
         emitSnapshot()
-        onTextSettled?(currentIndex, texts[currentIndex])
+        onItemSettled?(currentIndex)
     }
 
     /// Cancels in-flight motion without changing the last settled item.
