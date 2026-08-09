@@ -1,0 +1,46 @@
+name: ITextKitExample
+options:
+  bundleIdPrefix: com.ibabyblue
+  deploymentTarget:
+    iOS: "15.0"
+packages:
+  ITextKit:
+    path: ..
+settings:
+  base:
+    DEVELOPMENT_TEAM: ""
+    SWIFT_VERSION: "5.0"
+targets:
+  ITextKitExample:
+    type: application
+    platform: iOS
+    sources:
+      - ITextKitExample
+    dependencies:
+      - package: ITextKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ibabyblue.ITextKitExample
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+  ITextKitExampleUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - ITextKitExampleUITests
+    dependencies:
+      - target: ITextKitExample
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ibabyblue.ITextKitExampleUITests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  ITextKitExample:
+    build:
+      targets:
+        ITextKitExample: all
+        ITextKitExampleUITests: [test]
+    test:
+      targets:
+        - ITextKitExampleUITests
