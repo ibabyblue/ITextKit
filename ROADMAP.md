@@ -4,7 +4,6 @@ ITextKit currently provides plain and attributed rotation, marquee movement, and
 
 ## Planned
 
-- Markdown rendering and motion composition
 - Migration of the existing IShimmerText behavior directly into ITextKit
 
-The IShimmerText migration does not require compatibility wrappers because it has no current consumers. API and behavior will be designed when that work begins.
+The IShimmerText migration does not require compatibility wrappers because it has no current consumers.
