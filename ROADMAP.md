@@ -1,9 +1,7 @@
 # Roadmap
 
-ITextKit currently provides plain and attributed rotation, marquee movement, and one-shot typewriter presentation. Planned capabilities are intentionally listed here instead of being exposed as placeholder APIs.
+ITextKit currently provides plain and attributed rotation, marquee movement, one-shot typewriter presentation, and native text shimmer for SwiftUI and UIKit.
 
 ## Planned
 
-- Migration of the existing IShimmerText behavior directly into ITextKit
-
-The IShimmerText migration does not require compatibility wrappers because it has no current consumers.
+No additional capabilities are currently planned. Future capabilities will be documented here before placeholder interfaces are introduced.

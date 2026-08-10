@@ -2,6 +2,13 @@
 
 All notable changes to ITextKit are documented in this file.
 
+## Unreleased
+
+### Added
+
+- SwiftUI `.shimmerText(...)` and UIKit `ITextShimmerLabel` native text-highlight sweeps.
+- Semantic directions, configuration normalization, rich-text preservation, Reduce Motion, lifecycle, accessibility, example, and regression coverage for shimmer.
+
 ## 0.2.0 - 2026-08-09
 
 ### Added

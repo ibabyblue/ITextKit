@@ -15,6 +15,8 @@ ITextKit is a UI component library for text presentation. It is not a wrapper ar
 - `ITextRotator` and `ITextRotatorView` rotate through variable-height text with an upward fade
 - `ITextMarquee` and `ITextMarqueeView` move one overflowing line in a seamless loop
 - `ITextTypewriter` and `ITextTypewriterView` reveal one complete character at a time while their ideal size grows
+- `.shimmerText(...)` adds a native SwiftUI highlight sweep without replacing the original text
+- `ITextShimmerLabel` adds the same treatment to a native UIKit label
 - Plain `String` APIs plus native `AttributedString` and `NSAttributedString` input
 - One package product and one module: `import ITextKit` in SwiftUI, UIKit, or mixed targets
 - Declarative SwiftUI and imperative UIKit playback for rotator and marquee; automatic one-shot typewriter playback
@@ -221,6 +223,39 @@ The visual size starts at zero and follows the currently revealed prefix. The AP
 
 Typewriter playback starts automatically when the view is visible and the scene is active. Leaving the active hierarchy freezes exact progress; returning resumes it. Content or configuration changes restart from an empty prefix, while view-level font, Dynamic Type, and layout-width changes only remeasure the current prefix. There are no playback controls, cursor, callbacks, gestures, sounds, or haptics.
 
+## Text Shimmer
+
+Shimmer is a repeating decorative highlight over real text. The original text remains responsible for layout, intrinsic sizing, hit testing, and accessibility; only a private highlight-colored copy is animated.
+
+### SwiftUI
+
+Apply typography, foreground styling, line limits, and layout before `.shimmerText(...)` so the private copy receives the same rendered text shape:
+
+```swift
+Text("Working…")
+    .font(.headline)
+    .foregroundStyle(.secondary)
+    .shimmerText()
+```
+
+Use `Text(attributedValue)` the same way for `AttributedString` content. Set `isActive: false` to remove the overlay. A later activation begins a complete sweep rather than resuming old progress.
+
+### UIKit
+
+```swift
+let label = ITextShimmerLabel()
+label.text = "Working…"
+label.textColor = .secondaryLabel
+label.highlightColor = .label
+label.isShimmering = true
+```
+
+`ITextShimmerLabel` is a native `UILabel`, so its base text owns intrinsic size, Dynamic Type, multiline drawing, interaction, and VoiceOver. For `NSAttributedString`, the private copy preserves fonts, paragraph styles, kerning, and decorations while replacing only its foreground color; the caller's attributed value is not mutated. Leaving a window removes renderer-owned animation, and returning starts a complete sweep when the request is still active.
+
+Both APIs accept `ITextShimmerConfiguration`. Defaults are a `1.5`-second sweep, band width `0.28` of rendered width, intensity `0.85`, and semantic leading-to-trailing direction. Renderers clamp finite duration to `0.2...10`, band width to `0.05...1`, and intensity to `0...1`; non-finite values use that property's default. Changing configuration restarts active UIKit animation. Leading and trailing resolve against the current layout direction, and one band traverses the complete rendered bounds even for multiline text.
+
+Reduce Motion removes the decorative copy and leaves stable base text. Dynamic `Color` and `UIColor` values continue to resolve with the environment. The overlay is noninteractive and hidden from accessibility. SwiftUI delegates repetition to native animation and UIKit uses one keyed Core Animation; neither implementation owns a timer, display link, or per-frame Swift callback. Shimmer uses `isActive` or `isShimmering`, not `ITextPlaybackState`.
+
 ## Playback Contract
 
 The following explicit playback contract applies to rotator and marquee. Typewriter uses the automatic one-shot lifecycle described above.
@@ -244,6 +279,7 @@ Leaving a window, disappearing, or moving to an inactive application scene suspe
 - Reduce Motion turns rotator movement into a cross-fade
 - Reduce Motion stops marquee movement and shows one tail-truncated line
 - Reduce Motion completes typewriter text immediately; turning it off does not replay completed content
+- Reduce Motion removes shimmer animation and exposes only the original text
 
 ## Configuration Resolution
 
@@ -257,6 +293,9 @@ Public configuration values remain the values supplied by the caller. Renderers 
 | Negative marquee spacing or delay | `0` |
 | Typewriter `charactersPerSecond <= 0` | `20` characters per second |
 | Negative typewriter delay | `0` |
+| Shimmer duration outside `0.2...10` | nearest bound |
+| Shimmer band width outside `0.05...1` | nearest bound |
+| Shimmer intensity outside `0...1` | nearest bound; `0` disables the overlay |
 | Any non-finite value | that property's default |
 
 ## Documentation and Example
@@ -265,6 +304,7 @@ Public configuration values remain the values supplied by the caller. Renderers 
 - [Rotator guide](Sources/ITextKit/Documentation.docc/TextRotator.md)
 - [Marquee guide](Sources/ITextKit/Documentation.docc/TextMarquee.md)
 - [Typewriter guide](Sources/ITextKit/Documentation.docc/TextTypewriter.md)
+- [Shimmer guide](Sources/ITextKit/Documentation.docc/TextShimmer.md)
 - [Attributed text contract](Sources/ITextKit/Documentation.docc/AttributedText.md)
 - [Playback and lifecycle](Sources/ITextKit/Documentation.docc/PlaybackAndLifecycle.md)
 - [Offline SwiftUI and UIKit example](Example/README.md)
