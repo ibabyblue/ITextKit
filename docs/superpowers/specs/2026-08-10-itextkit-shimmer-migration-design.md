@@ -93,11 +93,14 @@ The standalone package's empty `IShimmerText` namespace enum is not migrated.
 
 ### SwiftUI
 
-The caller applies text typography, foreground style, line limits, and layout
-before `.shimmerText(...)`. The modifier preserves the original content and
-places a highlight-colored copy above it. A moving gradient mask reveals the
-highlight copy. The overlay does not participate in hit testing and is hidden
-from accessibility.
+The caller applies text-rendering modifiers such as typography, foreground
+style, line limits, and multiline alignment before `.shimmerText(...)`, then
+applies outer frame expansion, padding, backgrounds, and container overlays.
+The modifier preserves the original content and places a highlight-colored
+copy above it. Because that copy captures content at the modifier call site,
+earlier backgrounds or decorations would also be revealed by the moving mask.
+The overlay does not participate in hit testing and is hidden from
+accessibility.
 
 The modifier is declared on `View` because common SwiftUI text and layout
 modifiers can erase the concrete `Text` type. The supported contract is limited

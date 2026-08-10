@@ -1,6 +1,42 @@
+import UIKit
 import XCTest
 
 final class ITextKitExampleUITests: XCTestCase {
+    func testSwiftUIShimmerDoesNotAnimateCardBackground() {
+        let app = XCUIApplication()
+        app.launch()
+        app.swipeUp()
+        app.swipeUp()
+
+        let shimmerText = app.staticTexts["SwiftUI shimmer"]
+        XCTAssertTrue(shimmerText.waitForExistence(timeout: 2))
+
+        let samplePoint = CGPoint(
+            x: app.windows.firstMatch.frame.maxX - 50,
+            y: shimmerText.frame.midY
+        )
+        var samples: [[UInt8]] = []
+
+        // Cover more than the default 1.5-second sweep so the moving band must
+        // cross this background-only point if the card is copied by Shimmer.
+        for _ in 0..<20 {
+            samples.append(pixelRGBA(in: app.screenshot().image, at: samplePoint))
+            Thread.sleep(forTimeInterval: 0.08)
+        }
+
+        let maximumChannelVariation = (0..<3).map { channel in
+            let values = samples.map { Int($0[channel]) }
+            return (values.max() ?? 0) - (values.min() ?? 0)
+        }.max() ?? 0
+
+        XCTAssertLessThanOrEqual(
+            maximumChannelVariation,
+            3,
+            "The card background changed while only its text should shimmer. " +
+                "frame=\(shimmerText.frame), samples=\(samples)"
+        )
+    }
+
     func testSwiftUIRotatorUsesSingleLineMessages() {
         let app = XCUIApplication()
         app.launch()
@@ -99,5 +135,37 @@ final class ITextKitExampleUITests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    private func pixelRGBA(in image: UIImage, at point: CGPoint) -> [UInt8] {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let onePointImage = UIGraphicsImageRenderer(
+            size: CGSize(width: 1, height: 1),
+            format: format
+        ).image { _ in
+            image.draw(at: CGPoint(x: -point.x, y: -point.y))
+        }
+
+        guard let source = onePointImage.cgImage else {
+            XCTFail("The UI screenshot did not provide CGImage data.")
+            return [0, 0, 0, 0]
+        }
+
+        var pixel = [UInt8](repeating: 0, count: 4)
+        pixel.withUnsafeMutableBytes { bytes in
+            let context = CGContext(
+                data: bytes.baseAddress,
+                width: 1,
+                height: 1,
+                bitsPerComponent: 8,
+                bytesPerRow: 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+            context?.draw(source, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+        }
+        return pixel
     }
 }

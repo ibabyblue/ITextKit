@@ -78,9 +78,6 @@ struct SwiftUIExampleView: View {
                 Text("SwiftUI shimmer")
                     .font(.headline)
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(Color.mint.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
                     .shimmerText(
                         configuration: .init(
                             duration: 1.5,
@@ -90,6 +87,9 @@ struct SwiftUIExampleView: View {
                         ),
                         highlight: .primary
                     )
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(Color.mint.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
 
                 typewriterReplayButton
 

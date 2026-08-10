@@ -8,7 +8,7 @@ Text shimmer renders the original text normally and reveals a private highlight-
 
 ## SwiftUI
 
-Apply typography, foreground styling, line limits, and layout before `.shimmerText(...)`. This lets the modifier copy the final text presentation without taking ownership of layout:
+Apply text-rendering modifiers such as typography, foreground styling, line limits, and multiline alignment before `.shimmerText(...)`. Apply outer frame expansion, padding, backgrounds, and container overlays afterward. The modifier copies the content at its call site, so any background placed earlier also becomes part of the moving highlight copy:
 
 ```swift
 import ITextKit
@@ -18,6 +18,9 @@ Text("Working…")
     .font(.headline)
     .foregroundStyle(.secondary)
     .shimmerText()
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
+    .background(Color.mint.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
 ```
 
 The modifier also supports `Text(AttributedString)`. Its API lives on `View` so it remains callable after standard text modifiers erase the concrete `Text` type, but its rendering contract is text content rather than arbitrary views.

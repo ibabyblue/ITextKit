@@ -517,8 +517,9 @@ import SwiftUI
 public extension View {
     /// Adds a repeating highlight sweep to rendered text.
     ///
-    /// Apply typography, foreground styling, line limits, and layout before
-    /// this modifier. The original content remains the sole layout,
+    /// Apply text styling before this modifier and outer layout or decoration
+    /// after it, so only text enters the highlight copy. The original remains
+    /// the sole layout,
     /// hit-testing, and accessibility owner. The overlay is omitted when
     /// inactive, under Reduce Motion, or at zero resolved intensity.
     /// Deactivation discards progress, so later reactivation starts a complete
@@ -1213,9 +1214,6 @@ sectionTitle("Text shimmer")
 Text("SwiftUI shimmer")
     .font(.headline)
     .foregroundStyle(.secondary)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(16)
-    .background(Color.mint.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
     .shimmerText(
         configuration: .init(
             duration: 1.5,
@@ -1225,9 +1223,12 @@ Text("SwiftUI shimmer")
         ),
         highlight: .primary
     )
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
+    .background(Color.mint.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
 ```
 
-Typography, foreground, layout, padding, and background precede `.shimmerText()` to demonstrate the documented ordering.
+Typography and foreground precede `.shimmerText()`. Outer layout, padding, and background follow it so only text enters the animated copy.
 
 - [ ] **Step 4: Add the UIKit example**
 

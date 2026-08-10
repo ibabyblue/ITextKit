@@ -4,8 +4,12 @@ import SwiftUI
 public extension View {
     /// Adds a repeating highlight sweep to rendered text.
     ///
-    /// Apply typography, foreground styling, line limits, and layout before
-    /// this modifier. The original content remains the sole layout,
+    /// Apply text-rendering modifiers such as font, foreground style, line
+    /// limits, and multiline alignment before this modifier. Apply outer
+    /// layout and decoration such as frame expansion, padding, background, and
+    /// container overlays afterward. The modifier copies the content exactly
+    /// at its call site, so a background applied earlier would also appear in
+    /// the moving highlight copy. The original content remains the sole layout,
     /// hit-testing, and accessibility owner. The overlay is omitted when
     /// `isActive` is `false`, Reduce Motion is enabled, or resolved intensity is
     /// zero. Deactivation discards progress, so later reactivation starts a

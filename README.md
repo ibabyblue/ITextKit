@@ -229,13 +229,16 @@ Shimmer is a repeating decorative highlight over real text. The original text re
 
 ### SwiftUI
 
-Apply typography, foreground styling, line limits, and layout before `.shimmerText(...)` so the private copy receives the same rendered text shape:
+Apply text-rendering modifiers such as typography, foreground styling, line limits, and multiline alignment before `.shimmerText(...)`. Put outer layout and decoration such as frame expansion, padding, background, and container overlays afterward. The modifier copies content at its call site, so an earlier background would intentionally enter the moving highlight copy:
 
 ```swift
 Text("Working…")
     .font(.headline)
     .foregroundStyle(.secondary)
     .shimmerText()
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
+    .background(Color.mint.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
 ```
 
 Use `Text(attributedValue)` the same way for `AttributedString` content. Set `isActive: false` to remove the overlay. A later activation begins a complete sweep rather than resuming old progress.
