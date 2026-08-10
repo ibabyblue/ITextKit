@@ -128,7 +128,7 @@ Run:
 
 ```bash
 xcodebuild -quiet test -scheme ITextKit \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing:ITextKitCoreTests/ITextShimmerConfigurationTests \
   CODE_SIGNING_ALLOWED=NO
 ```
@@ -348,7 +348,7 @@ final class ITextShimmerActivationStateTests: XCTestCase {
 
 ```bash
 xcodebuild -quiet test -scheme ITextKit \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing:ITextKitCoreTests/ITextShimmerGeometryTests \
   -only-testing:ITextKitCoreTests/ITextShimmerActivationStateTests \
   CODE_SIGNING_ALLOWED=NO
@@ -500,7 +500,7 @@ final class ITextShimmerModifierTests: XCTestCase {
 
 ```bash
 xcodebuild -quiet test -scheme ITextKit \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing:ITextKitSwiftUITests/ITextShimmerModifierTests \
   CODE_SIGNING_ALLOWED=NO
 ```
@@ -851,7 +851,7 @@ func testDeactivationWindowRemovalAndMissingContentRemoveAnimation() throws {
 
 ```bash
 xcodebuild -quiet test -scheme ITextKit \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing:ITextKitUIKitTests/ITextShimmerLabelTests \
   CODE_SIGNING_ALLOWED=NO
 ```
@@ -1197,7 +1197,7 @@ keepScreenshot(of: app, named: "UIKit Shimmer")
 xcodebuild -quiet test \
   -project Example/ITextKitExample.xcodeproj \
   -scheme ITextKitExample \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   CODE_SIGNING_ALLOWED=NO
 ```
 
@@ -1413,7 +1413,7 @@ Expected: valid package JSON with iOS 15, one `ITextKit` product, and no externa
 
 ```bash
 xcodebuild -quiet test -scheme ITextKit \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   CODE_SIGNING_ALLOWED=NO
 ```
 
@@ -1457,7 +1457,7 @@ Expected: PASS.
 xcodebuild -quiet test \
   -project Example/ITextKitExample.xcodeproj \
   -scheme ITextKitExample \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   CODE_SIGNING_ALLOWED=NO
 ```
 
