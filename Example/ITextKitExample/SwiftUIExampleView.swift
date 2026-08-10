@@ -73,6 +73,24 @@ struct SwiftUIExampleView: View {
                 .background(Color.green.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
                 .id(playbackGeneration)
 
+                sectionTitle("Text shimmer")
+
+                Text("SwiftUI shimmer")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(Color.mint.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
+                    .shimmerText(
+                        configuration: .init(
+                            duration: 1.5,
+                            bandWidth: 0.28,
+                            intensity: 0.85,
+                            direction: .leadingToTrailing
+                        ),
+                        highlight: .primary
+                    )
+
                 typewriterReplayButton
 
                 sectionTitle("Plain typewriter")

@@ -32,6 +32,10 @@ final class ITextKitExampleUITests: XCTestCase {
         keepScreenshot(of: app, named: "SwiftUI Attributed Marquee")
 
         app.swipeUp()
+        XCTAssertTrue(app.staticTexts["SwiftUI shimmer"].waitForExistence(timeout: 2))
+        keepScreenshot(of: app, named: "SwiftUI Shimmer")
+
+        app.swipeUp()
         XCTAssertTrue(app.staticTexts["Plain typewriter"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.staticTexts["Attributed typewriter"].exists)
         XCTAssertTrue(app.otherElements[
@@ -71,6 +75,10 @@ final class ITextKitExampleUITests: XCTestCase {
         ]
         XCTAssertTrue(richMarquee.waitForExistence(timeout: 2))
         keepScreenshot(of: app, named: "UIKit Attributed Marquee")
+
+        app.swipeUp()
+        XCTAssertTrue(app.staticTexts["UIKit shimmer"].waitForExistence(timeout: 2))
+        keepScreenshot(of: app, named: "UIKit Shimmer")
 
         app.swipeUp()
         XCTAssertTrue(app.staticTexts["Plain typewriter"].waitForExistence(timeout: 2))

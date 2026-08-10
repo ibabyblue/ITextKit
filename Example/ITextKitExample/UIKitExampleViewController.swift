@@ -22,6 +22,8 @@ final class UIKitExampleViewController: UIViewController {
         attributedText: UIKitExampleViewController.makeAttributedMarqueeText()
     )
 
+    private let shimmerLabel = ITextShimmerLabel()
+
     private let typewriter = ITextTypewriterView(
         text: UIKitExampleViewController.plainTypewriterText,
         configuration: .init(charactersPerSecond: 24, initialDelay: 0.35)
@@ -58,6 +60,13 @@ final class UIKitExampleViewController: UIViewController {
 
         attributedMarquee.adjustsFontForContentSizeCategory = true
 
+        shimmerLabel.text = "UIKit shimmer"
+        shimmerLabel.font = .preferredFont(forTextStyle: .headline)
+        shimmerLabel.textColor = .secondaryLabel
+        shimmerLabel.highlightColor = .label
+        shimmerLabel.adjustsFontForContentSizeCategory = true
+        shimmerLabel.isShimmering = true
+
         typewriter.font = .preferredFont(forTextStyle: .body)
         typewriter.textColor = .label
         typewriter.numberOfLines = 0
@@ -81,6 +90,8 @@ final class UIKitExampleViewController: UIViewController {
             card(containing: marquee, color: .systemOrange),
             heading("Attributed overflow-only marquee"),
             card(containing: attributedMarquee, color: .systemGreen),
+            heading("Text shimmer"),
+            card(containing: shimmerLabel, color: .systemMint),
             makeTypewriterReplayButton(),
             heading("Plain typewriter"),
             typewriterCard(containing: typewriter, color: .systemCyan),
