@@ -38,7 +38,7 @@ struct _ITextFallbackRun {
 }
 
 struct _ITextDecorationRecord {
-    enum Kind {
+    enum Kind: Equatable {
         case underline
         case strikethrough
     }
