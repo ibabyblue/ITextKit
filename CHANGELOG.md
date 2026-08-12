@@ -2,6 +2,15 @@
 
 All notable changes to ITextKit are documented in this file.
 
+## Unreleased
+
+### Added
+
+- UIKit `ITextStyledLabel` and SwiftUI `ITextStyledText` with solid or linear-gradient fill and exact outward point-based outlines.
+- Linear-gradient outlines, multiline continuity, semantic RTL directions, color-Emoji fallback, bounded glyph caching, and UIKit-compatible sizing.
+- Styled overloads for rotator, marquee, typewriter, and shimmer in both frameworks.
+- Visual geometry and cold, warm, animation, list, and cache performance regression suites.
+
 ## 0.2.2 - 2026-08-12
 
 ### Fixed

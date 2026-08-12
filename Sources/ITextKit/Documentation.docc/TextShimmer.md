@@ -25,6 +25,8 @@ Text("Working…")
 
 The modifier also supports `Text(AttributedString)`. Its API lives on `View` so it remains callable after standard text modifiers erase the concrete `Text` type, but its rendering contract is text content rather than arbitrary views.
 
+It also composes with ``ITextStyledText``. The highlight uses final rendered alpha as its mask, so both fill and outward stroke participate. Apply `.shimmerText(...)` after styled rendering and before outer padding, backgrounds, or container overlays.
+
 Set `isActive: false` when the decoration is not requested:
 
 ```swift
@@ -40,7 +42,7 @@ Text(status)
 
 ## UIKit
 
-``ITextShimmerLabel`` subclasses `UILabel`, so callers use normal label properties and Auto Layout:
+``ITextShimmerLabel`` subclasses ``ITextStyledLabel``, which remains a `UILabel`, so callers use normal label properties and Auto Layout:
 
 ```swift
 import ITextKit

@@ -17,6 +17,7 @@ ITextKit is a UI component library for text presentation. It is not a wrapper ar
 - `ITextTypewriter` and `ITextTypewriterView` reveal one complete character at a time while their ideal size grows
 - `.shimmerText(...)` adds a native SwiftUI highlight sweep without replacing the original text
 - `ITextShimmerLabel` adds the same treatment to a native UIKit label
+- `ITextStyledText` and `ITextStyledLabel` add linear-gradient fill and exact outward outlines
 - Plain `String` APIs plus native `AttributedString` and `NSAttributedString` input
 - One package product and one module: `import ITextKit` in SwiftUI, UIKit, or mixed targets
 - Declarative SwiftUI and imperative UIKit playback for rotator and marquee; automatic one-shot typewriter playback
@@ -61,6 +62,42 @@ Every source file uses the same import:
 ```swift
 import ITextKit
 ```
+
+## Styled Text
+
+Styled text supports solid or continuous linear-gradient fill plus a solid or linear-gradient outline. The public outline width is the visible thickness outside the glyph, in points: a `2` point stroke adds `4` points to unconstrained width and height without squeezing the fill.
+
+```swift
+let label = ITextStyledLabel()
+label.text = "Fantasia"
+label.font = .systemFont(ofSize: 28, weight: .bold)
+label.textStyle = .init(
+    fill: .linearGradient(.init(colors: [.systemPink, .systemOrange])),
+    stroke: .init(
+        paint: .linearGradient(.init(colors: [.white, .systemYellow])),
+        width: 2
+    )
+)
+```
+
+```swift
+ITextStyledText(
+    "Fantasia",
+    font: .systemFont(ofSize: 28, weight: .bold),
+    style: .init(
+        fill: .linearGradient(.init(colors: [.pink, .orange])),
+        stroke: .init(
+            paint: .linearGradient(.init(colors: [.white, .yellow])),
+            width: 2
+        )
+    )
+)
+.shimmerText()
+```
+
+The SwiftUI styled path deliberately accepts `String` or `NSAttributedString` plus `UIFont`. It works from iOS 15 and does not inspect an opaque native `Text` or SwiftUI `Font`; outer `.font(...)` does not alter `ITextStyledText`. Use `font` or `defaultFont` instead.
+
+Gradients span the complete rendered text bounds, including all lines. Semantic leading/trailing points mirror in RTL; `.unit(x:y:)` remains physical. Empty gradients are absent, one-color gradients become solid, and stroke widths resolve to `0...64` points. Color Emoji use the native fallback path. Styled overloads are available for rotator, marquee, typewriter, and shimmer. Apply shimmer after styled text and before outer padding or backgrounds.
 
 The module contains both SwiftUI and UIKit public APIs. Importing it does not force a source file to import either framework explicitly; add `import SwiftUI` or `import UIKit` only when that file otherwise needs the framework.
 

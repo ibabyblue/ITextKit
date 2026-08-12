@@ -16,6 +16,8 @@ Unknown or custom attributes remain available to the native renderer but have no
 
 SwiftUI relative `Font` values follow SwiftUI Dynamic Type behavior. In UIKit, ranges without an explicit font use the view's `font` and `adjustsFontForContentSizeCategory`; explicit `UIFont` runs remain the caller's responsibility. Pixel-identical output between SwiftUI and UIKit is not promised.
 
+The styled SwiftUI path is intentionally separate: ``ITextStyledText`` accepts `NSAttributedString` plus an explicit default `UIFont`. It does not convert or introspect arbitrary native `Text`, `AttributedString`, or SwiftUI `Font` values. This keeps CoreText glyph behavior explicit and available from iOS 15.
+
 ## Ownership and Reset
 
 UIKit copies each attributed value at assignment, so later mutation of a caller-owned `NSMutableAttributedString` does not alter the view.
