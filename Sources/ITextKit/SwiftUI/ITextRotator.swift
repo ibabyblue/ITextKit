@@ -17,6 +17,7 @@ public struct ITextRotator: View {
 
     /// Caller-requested playback state.
     private let playbackState: ITextPlaybackState
+    private let styledContent: _ITextStyledEffectConfiguration?
 
     /// Action invoked after a new text finishes settling.
     private var onTextChange: ((Int, String) -> Void)?
@@ -65,6 +66,7 @@ public struct ITextRotator: View {
         playbackState: ITextPlaybackState = .playing
     ) {
         self.attributedTexts = attributedTexts
+        self.styledContent = nil
         self.configuration = configuration
         self.playbackState = playbackState
         _model = StateObject(wrappedValue: _ITextRotatorObservable(
@@ -74,14 +76,73 @@ public struct ITextRotator: View {
         ))
     }
 
+    public init(
+        texts: [String],
+        font: UIFont = .preferredFont(forTextStyle: .body),
+        textStyle: ITextSwiftUIStyle,
+        adjustsFontForContentSizeCategory: Bool = true,
+        configuration: ITextRotatorConfiguration = .default,
+        playbackState: ITextPlaybackState = .playing
+    ) {
+        self.init(
+            styledAttributedTexts: texts.map { NSAttributedString(string: $0) },
+            defaultFont: font,
+            textStyle: textStyle,
+            adjustsFontForContentSizeCategory: adjustsFontForContentSizeCategory,
+            configuration: configuration,
+            playbackState: playbackState
+        )
+    }
+
+    public init(
+        styledAttributedTexts: [NSAttributedString],
+        defaultFont: UIFont = .preferredFont(forTextStyle: .body),
+        textStyle: ITextSwiftUIStyle,
+        adjustsFontForContentSizeCategory: Bool = true,
+        configuration: ITextRotatorConfiguration = .default,
+        playbackState: ITextPlaybackState = .playing
+    ) {
+        let snapshots = styledAttributedTexts.map(NSAttributedString.init(attributedString:))
+        let nativeValues = snapshots.map { AttributedString($0.string) }
+        self.attributedTexts = nativeValues
+        self.configuration = configuration
+        self.playbackState = playbackState
+        self.styledContent = .init(
+            values: snapshots,
+            defaultFont: defaultFont,
+            style: textStyle,
+            adjustsFont: adjustsFontForContentSizeCategory
+        )
+        _model = StateObject(wrappedValue: _ITextRotatorObservable(
+            attributedTexts: nativeValues,
+            configuration: configuration,
+            playbackState: playbackState
+        ))
+    }
+
     /// The current and optional entering text rendered from deterministic transition progress.
-    public var body: some View {
+    @ViewBuilder public var body: some View {
+        if let styledContent {
+            _ITextStyledRotatorRepresentable(
+                content: styledContent,
+                configuration: configuration,
+                playbackState: playbackState,
+                onChange: onTextChange
+            )
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityLabel(styledContent.values.first?.string ?? "")
+        } else {
+            nativeBody
+        }
+    }
+
+    private var nativeBody: some View {
         let transition = _ITextRotatorTransitionPresentation(
             linearProgress: model.transitionProgress,
             reduceMotion: reduceMotion
         )
 
-        ZStack(alignment: .topLeading) {
+        return ZStack(alignment: .topLeading) {
             if let currentText = model.currentAttributedText {
                 Text(currentText)
                     .fixedSize(horizontal: false, vertical: true)

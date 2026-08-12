@@ -1,0 +1,106 @@
+import SwiftUI
+import UIKit
+
+struct _ITextStyledEffectConfiguration {
+    let values: [NSAttributedString]
+    let defaultFont: UIFont
+    let style: ITextSwiftUIStyle
+    let adjustsFont: Bool
+}
+
+@MainActor
+struct _ITextStyledRotatorRepresentable: UIViewRepresentable {
+    let content: _ITextStyledEffectConfiguration
+    let configuration: ITextRotatorConfiguration
+    let playbackState: ITextPlaybackState
+    let onChange: ((Int, String) -> Void)?
+
+    func makeUIView(context: Context) -> ITextRotatorView {
+        ITextRotatorView(
+            attributedTexts: content.values,
+            configuration: configuration,
+            playbackState: playbackState
+        )
+    }
+
+    func updateUIView(_ view: ITextRotatorView, context: Context) {
+        view.attributedTexts = content.values
+        view.configuration = configuration
+        view.font = content.defaultFont
+        view.adjustsFontForContentSizeCategory = content.adjustsFont
+        view.textStyle = ITextStyledText._resolvedUIKitStyle(content.style)
+        view.onTextChange = onChange
+        synchronize(playbackState, with: view)
+    }
+}
+
+@MainActor
+struct _ITextStyledMarqueeRepresentable: UIViewRepresentable {
+    let content: _ITextStyledEffectConfiguration
+    let configuration: ITextMarqueeConfiguration
+    let playbackState: ITextPlaybackState
+
+    func makeUIView(context: Context) -> ITextMarqueeView {
+        ITextMarqueeView(
+            attributedText: content.values[0],
+            configuration: configuration,
+            playbackState: playbackState
+        )
+    }
+
+    func updateUIView(_ view: ITextMarqueeView, context: Context) {
+        view.attributedText = content.values[0]
+        view.configuration = configuration
+        view.font = content.defaultFont
+        view.adjustsFontForContentSizeCategory = content.adjustsFont
+        view.textStyle = ITextStyledText._resolvedUIKitStyle(content.style)
+        synchronize(playbackState, with: view)
+    }
+}
+
+@MainActor
+struct _ITextStyledTypewriterRepresentable: UIViewRepresentable {
+    let content: _ITextStyledEffectConfiguration
+    let configuration: ITextTypewriterConfiguration
+
+    func makeUIView(context: Context) -> ITextTypewriterView {
+        ITextTypewriterView(
+            attributedText: content.values[0],
+            configuration: configuration
+        )
+    }
+
+    func updateUIView(_ view: ITextTypewriterView, context: Context) {
+        view.attributedText = content.values[0]
+        view.configuration = configuration
+        view.font = content.defaultFont
+        view.adjustsFontForContentSizeCategory = content.adjustsFont
+        view.textStyle = ITextStyledText._resolvedUIKitStyle(content.style)
+    }
+}
+
+@MainActor
+private func synchronize(
+    _ state: ITextPlaybackState,
+    with view: ITextRotatorView
+) {
+    guard state != view.playbackState else { return }
+    switch state {
+    case .playing: view.start()
+    case .paused: view.pause()
+    case .stopped: view.stop()
+    }
+}
+
+@MainActor
+private func synchronize(
+    _ state: ITextPlaybackState,
+    with view: ITextMarqueeView
+) {
+    guard state != view.playbackState else { return }
+    switch state {
+    case .playing: view.start()
+    case .paused: view.pause()
+    case .stopped: view.stop()
+    }
+}

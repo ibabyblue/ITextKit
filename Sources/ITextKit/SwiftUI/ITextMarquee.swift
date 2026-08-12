@@ -16,6 +16,7 @@ public struct ITextMarquee: View {
 
     /// Caller-requested playback state.
     private let playbackState: ITextPlaybackState
+    private let styledContent: _ITextStyledEffectConfiguration?
 
     /// Long-lived timing and display-link ownership.
     @StateObject private var model: _ITextMarqueeObservable
@@ -63,6 +64,7 @@ public struct ITextMarquee: View {
         playbackState: ITextPlaybackState = .playing
     ) {
         self.attributedText = attributedText
+        self.styledContent = nil
         self.configuration = configuration
         self.playbackState = playbackState
         _model = StateObject(wrappedValue: _ITextMarqueeObservable(
@@ -72,9 +74,66 @@ public struct ITextMarquee: View {
         ))
     }
 
+    public init(
+        text: String,
+        font: UIFont = .preferredFont(forTextStyle: .body),
+        textStyle: ITextSwiftUIStyle,
+        adjustsFontForContentSizeCategory: Bool = true,
+        configuration: ITextMarqueeConfiguration = .default,
+        playbackState: ITextPlaybackState = .playing
+    ) {
+        self.init(
+            styledAttributedText: NSAttributedString(string: text),
+            defaultFont: font,
+            textStyle: textStyle,
+            adjustsFontForContentSizeCategory: adjustsFontForContentSizeCategory,
+            configuration: configuration,
+            playbackState: playbackState
+        )
+    }
+
+    public init(
+        styledAttributedText: NSAttributedString,
+        defaultFont: UIFont = .preferredFont(forTextStyle: .body),
+        textStyle: ITextSwiftUIStyle,
+        adjustsFontForContentSizeCategory: Bool = true,
+        configuration: ITextMarqueeConfiguration = .default,
+        playbackState: ITextPlaybackState = .playing
+    ) {
+        let snapshot = NSAttributedString(attributedString: styledAttributedText)
+        let nativeValue = AttributedString(snapshot.string)
+        self.attributedText = nativeValue
+        self.configuration = configuration
+        self.playbackState = playbackState
+        self.styledContent = .init(
+            values: [snapshot],
+            defaultFont: defaultFont,
+            style: textStyle,
+            adjustsFont: adjustsFontForContentSizeCategory
+        )
+        _model = StateObject(wrappedValue: _ITextMarqueeObservable(
+            attributedText: nativeValue,
+            configuration: configuration,
+            playbackState: playbackState
+        ))
+    }
+
     /// Static fallback, hidden measurement, and optional repeated moving copies.
-    public var body: some View {
-        Text(attributedText)
+    @ViewBuilder public var body: some View {
+        if let styledContent {
+            _ITextStyledMarqueeRepresentable(
+                content: styledContent,
+                configuration: configuration,
+                playbackState: playbackState
+            )
+            .accessibilityLabel(styledContent.values[0].string)
+        } else {
+            nativeBody
+        }
+    }
+
+    private var nativeBody: some View {
+        return Text(attributedText)
             .lineLimit(1)
             .truncationMode(.tail)
             .frame(maxWidth: .infinity, alignment: .leading)

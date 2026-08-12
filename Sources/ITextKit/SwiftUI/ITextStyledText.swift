@@ -76,7 +76,7 @@ public struct ITextStyledText: View {
             attributedText: attributedText,
             gradientReferenceAttributedText: gradientReferenceAttributedText,
             defaultFont: resolvedDefaultFont,
-            style: Self.resolve(style),
+            style: Self._resolvedUIKitStyle(style),
             numberOfLines: lineLimit ?? 0,
             alignment: Self.resolve(multilineTextAlignment),
             layoutDirection: layoutDirection,
@@ -98,21 +98,21 @@ public struct ITextStyledText: View {
         )
     }
 
-    private static func resolve(
+    static func _resolvedUIKitStyle(
         _ style: ITextSwiftUIStyle
     ) -> ITextUIKitStyle {
         ITextUIKitStyle(
-            fill: style.fill.map(resolve),
+            fill: style.fill.map(_resolvePaint),
             stroke: style.stroke.map {
                 ITextStroke(
-                    paint: resolve($0.paint),
+                    paint: _resolvePaint($0.paint),
                     width: $0.width
                 )
             }
         )
     }
 
-    private static func resolve(
+    private static func _resolvePaint(
         _ paint: ITextPaint<Color>
     ) -> ITextPaint<UIColor> {
         switch paint {

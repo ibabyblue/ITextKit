@@ -14,6 +14,35 @@ final class ITextKitSwiftUIAPITests: XCTestCase {
                 stroke: .init(paint: .solid(.black), width: 1.5)
             )
         )
+        let style = ITextSwiftUIStyle(
+            fill: .linearGradient(.init(colors: [.pink, .orange])),
+            stroke: .init(paint: .solid(.black), width: 1.5)
+        )
+        _ = ITextRotator(
+            texts: ["First", "Second"],
+            textStyle: style,
+            playbackState: .paused
+        )
+        _ = ITextRotator(
+            styledAttributedTexts: [NSAttributedString(string: "Rich")],
+            textStyle: style,
+            playbackState: .paused
+        )
+        _ = ITextMarquee(
+            text: "Styled marquee",
+            textStyle: style,
+            playbackState: .paused
+        )
+        _ = ITextMarquee(
+            styledAttributedText: NSAttributedString(string: "Rich marquee"),
+            textStyle: style,
+            playbackState: .paused
+        )
+        _ = ITextTypewriter(text: "Styled typing", textStyle: style)
+        _ = ITextTypewriter(
+            styledAttributedText: NSAttributedString(string: "Rich typing"),
+            textStyle: style
+        )
 
         let rotator = ITextRotator(
             texts: ["Short", "A longer line that may wrap"],

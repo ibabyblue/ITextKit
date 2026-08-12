@@ -13,6 +13,7 @@ public struct ITextTypewriter: View {
 
     /// Shared reveal timing.
     private let configuration: ITextTypewriterConfiguration
+    private let styledContent: _ITextStyledEffectConfiguration?
 
     /// Long-lived timing, content boundaries, and display-link ownership.
     @StateObject private var model: _ITextTypewriterObservable
@@ -50,6 +51,7 @@ public struct ITextTypewriter: View {
         configuration: ITextTypewriterConfiguration = .default
     ) {
         self.attributedText = attributedText
+        self.styledContent = nil
         self.configuration = configuration
         _model = StateObject(wrappedValue: _ITextTypewriterObservable(
             attributedText: attributedText,
@@ -57,9 +59,61 @@ public struct ITextTypewriter: View {
         ))
     }
 
+    public init(
+        text: String,
+        font: UIFont = .preferredFont(forTextStyle: .body),
+        textStyle: ITextSwiftUIStyle,
+        adjustsFontForContentSizeCategory: Bool = true,
+        configuration: ITextTypewriterConfiguration = .default
+    ) {
+        self.init(
+            styledAttributedText: NSAttributedString(string: text),
+            defaultFont: font,
+            textStyle: textStyle,
+            adjustsFontForContentSizeCategory: adjustsFontForContentSizeCategory,
+            configuration: configuration
+        )
+    }
+
+    public init(
+        styledAttributedText: NSAttributedString,
+        defaultFont: UIFont = .preferredFont(forTextStyle: .body),
+        textStyle: ITextSwiftUIStyle,
+        adjustsFontForContentSizeCategory: Bool = true,
+        configuration: ITextTypewriterConfiguration = .default
+    ) {
+        let snapshot = NSAttributedString(attributedString: styledAttributedText)
+        let nativeValue = AttributedString(snapshot.string)
+        self.attributedText = nativeValue
+        self.configuration = configuration
+        self.styledContent = .init(
+            values: [snapshot],
+            defaultFont: defaultFont,
+            style: textStyle,
+            adjustsFont: adjustsFontForContentSizeCategory
+        )
+        _model = StateObject(wrappedValue: _ITextTypewriterObservable(
+            attributedText: nativeValue,
+            configuration: configuration
+        ))
+    }
+
     /// The current attributed prefix, with a zero-size placeholder before the first character.
-    public var body: some View {
-        Group {
+    @ViewBuilder public var body: some View {
+        if let styledContent {
+            _ITextStyledTypewriterRepresentable(
+                content: styledContent,
+                configuration: configuration
+            )
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityLabel(styledContent.values[0].string)
+        } else {
+            nativeBody
+        }
+    }
+
+    private var nativeBody: some View {
+        return Group {
             if model.snapshot.revealedCount == 0 {
                 Color.clear
                     .frame(width: 0, height: 0)
