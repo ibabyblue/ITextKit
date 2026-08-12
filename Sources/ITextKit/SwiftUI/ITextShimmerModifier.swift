@@ -95,7 +95,8 @@ private struct ITextShimmerAnimationIdentity: Hashable {
     let isRightToLeft: Bool
 }
 
-/// Reveals one highlight-colored content copy through a moving gradient mask.
+/// Reveals a highlight rectangle through the complete rendered content alpha
+/// and then through a moving gradient band.
 private struct ITextShimmerAnimatedOverlay<Content: View>: View {
     /// Content copy whose layout exactly matches the original view.
     let content: Content
@@ -112,12 +113,11 @@ private struct ITextShimmerAnimatedOverlay<Content: View>: View {
     /// Normalized mask position animated by SwiftUI from zero to one.
     @State private var progress: CGFloat = 0
 
-    /// Builds one masked copy and hands repeating frame advancement to SwiftUI.
+    /// Builds one alpha-masked overlay and hands frame advancement to SwiftUI.
     var body: some View {
-        content
-            .foregroundStyle(
-                highlight.opacity(Double(configuration.intensity))
-            )
+        Rectangle()
+            .fill(highlight.opacity(Double(configuration.intensity)))
+            .mask { content }
             .mask {
                 GeometryReader { proxy in
                     let geometry = ITextShimmerGeometry(

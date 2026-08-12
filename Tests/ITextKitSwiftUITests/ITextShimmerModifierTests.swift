@@ -5,6 +5,15 @@ import XCTest
 @MainActor
 final class ITextShimmerModifierTests: XCTestCase {
     func testModifierConstructsForPlainAttributedAndMultilineText() {
+        let styled = ITextStyledText(
+            "Working…",
+            font: .systemFont(ofSize: 28, weight: .bold),
+            style: .init(
+                fill: .linearGradient(.init(colors: [.blue, .purple])),
+                stroke: .init(paint: .solid(.black), width: 2)
+            )
+        )
+        .shimmerText(highlight: .white)
         let plain = Text("Working…")
             .foregroundStyle(.secondary)
             .shimmerText()
@@ -31,5 +40,6 @@ final class ITextShimmerModifierTests: XCTestCase {
         _ = plain
         _ = rich
         _ = multiline
+        _ = styled
     }
 }
