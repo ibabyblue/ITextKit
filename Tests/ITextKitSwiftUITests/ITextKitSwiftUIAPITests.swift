@@ -6,6 +6,15 @@ import XCTest
 @MainActor
 final class ITextKitSwiftUIAPITests: XCTestCase {
     func testSwiftUIControlsAreAvailableFromSingleModule() {
+        _ = ITextStyledText(
+            "Styled",
+            font: .systemFont(ofSize: 20),
+            style: .init(
+                fill: .linearGradient(.init(colors: [.pink, .orange])),
+                stroke: .init(paint: .solid(.black), width: 1.5)
+            )
+        )
+
         let rotator = ITextRotator(
             texts: ["Short", "A longer line that may wrap"],
             configuration: .init(interval: 2, transitionDuration: 0.25),
