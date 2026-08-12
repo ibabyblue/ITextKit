@@ -37,6 +37,17 @@ public final class ITextTypewriterView: UIView {
         }
     }
 
+    /// Shared fill and outline applied without resetting revealed characters.
+    public var textStyle: ITextUIKitStyle? {
+        didSet {
+            guard textStyle != oldValue else { return }
+            label.textStyle = textStyle
+            synchronizeGradientReference()
+            invalidateIntrinsicContentSize()
+            setNeedsLayout()
+        }
+    }
+
     /// Default font used by ranges without an inline font attribute.
     public var font: UIFont = .preferredFont(forTextStyle: .body) {
         didSet { synchronizeLabelStyle() }
@@ -74,7 +85,7 @@ public final class ITextTypewriterView: UIView {
     private var characterRanges: [NSRange] = []
 
     /// The only visual text label; the view itself owns accessibility.
-    private let label = UILabel()
+    private let label = ITextStyledLabel()
 
     /// Independent deterministic reveal engine.
     private let engine = _ITextTypewriterEngine(
@@ -239,6 +250,7 @@ public final class ITextTypewriterView: UIView {
     private func applySnapshot(_ snapshot: _ITextTypewriterSnapshot) {
         self.snapshot = snapshot
         label.attributedText = attributedPrefix(unitCount: snapshot.revealedCount)
+        synchronizeGradientReference()
         accessibilityLabel = storedAttributedText.string
         invalidateIntrinsicContentSize()
         setNeedsLayout()
@@ -248,12 +260,19 @@ public final class ITextTypewriterView: UIView {
     private func synchronizeLabelStyle() {
         label.font = font
         label.textColor = textColor
+        label.textStyle = textStyle
         label.textAlignment = textAlignment
         label.numberOfLines = numberOfLines
         label.lineBreakMode = lineBreakMode
         label.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory
         // Reassignment after UILabel defaults change preserves inline attributed values.
         applySnapshot(engine.snapshot)
+    }
+
+    private func synchronizeGradientReference() {
+        label._gradientReferenceAttributedText = textStyle == nil
+            ? nil
+            : storedAttributedText
     }
 
     /// Returns the current rich prefix without splitting an extended grapheme cluster.

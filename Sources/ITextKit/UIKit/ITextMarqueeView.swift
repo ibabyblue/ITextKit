@@ -36,6 +36,24 @@ public final class ITextMarqueeView: UIView {
         }
     }
 
+    /// Shared fill and outline applied to both seamless text copies.
+    public var textStyle: ITextUIKitStyle? {
+        didSet {
+            guard textStyle != oldValue else { return }
+            let oldWidth = resolvedStrokeWidth(oldValue)
+            let newWidth = resolvedStrokeWidth(textStyle)
+            for label in [primaryLabel, repeatedLabel] {
+                label.textStyle = textStyle
+            }
+            invalidateIntrinsicContentSize()
+            if oldWidth != newWidth {
+                engine.restart()
+                applySnapshot(engine.snapshot)
+            }
+            setNeedsLayout()
+        }
+    }
+
     /// The font applied to both private labels.
     public var font: UIFont = .preferredFont(forTextStyle: .body) {
         didSet { synchronizeLabelStyle(restartMotion: true) }
@@ -63,10 +81,10 @@ public final class ITextMarqueeView: UIView {
     private var storedAttributedText = NSAttributedString(string: "")
 
     /// The visible or first moving text copy.
-    private let primaryLabel = UILabel()
+    private let primaryLabel = ITextStyledLabel()
 
     /// The repeated moving text copy.
-    private let repeatedLabel = UILabel()
+    private let repeatedLabel = ITextStyledLabel()
 
     /// Shared deterministic motion engine.
     private let engine = _ITextMarqueeEngine(
@@ -325,6 +343,7 @@ public final class ITextMarqueeView: UIView {
         for label in [primaryLabel, repeatedLabel] {
             label.font = font
             label.textColor = textColor
+            label.textStyle = textStyle
             label.textAlignment = textAlignment
             label.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory
         }
@@ -335,6 +354,12 @@ public final class ITextMarqueeView: UIView {
             engine.restart()
         }
         setNeedsLayout()
+    }
+
+    private func resolvedStrokeWidth(_ style: ITextUIKitStyle?) -> CGFloat {
+        style?._resolved(
+            isRightToLeft: effectiveUserInterfaceLayoutDirection == .rightToLeft
+        ).stroke?.outwardWidth ?? 0
     }
 
     /// Measures the complete untruncated line independently from the labels' current frames.

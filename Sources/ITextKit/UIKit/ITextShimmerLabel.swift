@@ -3,7 +3,7 @@ import UIKit
 /// A label that reveals a highlight-colored copy of its text through a moving band.
 ///
 /// The label itself remains the only layout and accessibility owner. A private,
-/// noninteractive `UILabel` mirrors native text drawing properties, so plain and
+/// noninteractive ``ITextStyledLabel`` mirrors native text drawing properties, so plain and
 /// attributed text retain `UILabel` layout, intrinsic sizing, Dynamic Type, and
 /// multiline behavior. The copy replaces only its foreground color; caller-owned
 /// attributed strings are never mutated.
@@ -13,7 +13,7 @@ import UIKit
 /// Disabling and later re-enabling shimmer starts a complete sweep. Core Animation
 /// advances frames without a timer, display link, or per-frame package callback.
 @MainActor
-public final class ITextShimmerLabel: UILabel {
+public final class ITextShimmerLabel: ITextStyledLabel {
     /// Whether the caller requests a repeating highlight sweep.
     ///
     /// The default is `false`. Setting the same value is idempotent. Changing
@@ -52,8 +52,13 @@ public final class ITextShimmerLabel: UILabel {
         }
     }
 
+    /// Fill and outline mirrored into the masked highlight copy.
+    public override var textStyle: ITextUIKitStyle? {
+        didSet { synchronizeOverlayContent() }
+    }
+
     /// The only private visual copy; the receiver owns layout and accessibility.
-    private let shimmerOverlayLabel: UILabel
+    private let shimmerOverlayLabel: ITextStyledLabel
 
     /// Bounds used to construct the currently installed gradient animation.
     private var lastAnimatedBounds: CGRect = .null
@@ -71,7 +76,7 @@ public final class ITextShimmerLabel: UILabel {
     ///
     /// - Parameter frame: Initial frame in the superview's coordinate system.
     public override init(frame: CGRect) {
-        shimmerOverlayLabel = UILabel()
+        shimmerOverlayLabel = ITextStyledLabel()
         super.init(frame: frame)
         setUp()
     }
@@ -83,7 +88,7 @@ public final class ITextShimmerLabel: UILabel {
     ///
     /// - Parameter coder: Decoder supplied by UIKit.
     public required init?(coder: NSCoder) {
-        shimmerOverlayLabel = UILabel()
+        shimmerOverlayLabel = ITextStyledLabel()
         super.init(coder: coder)
         setUp()
     }
@@ -214,6 +219,7 @@ public final class ITextShimmerLabel: UILabel {
 
     /// Installs the noninteractive copy and observes changes Core Animation cannot infer.
     private func setUp() {
+        isAccessibilityElement = true
         shimmerOverlayLabel.isHidden = true
         shimmerOverlayLabel.isAccessibilityElement = false
         shimmerOverlayLabel.isUserInteractionEnabled = false
@@ -239,6 +245,10 @@ public final class ITextShimmerLabel: UILabel {
     private func synchronizeOverlayContent() {
         let resolved = configuration.resolved
         let highlight = highlightColor.withAlphaComponent(resolved.intensity)
+        shimmerOverlayLabel.textStyle = highlightedStyle(
+            textStyle,
+            color: highlight
+        )
 
         if let attributedText {
             let copy = NSMutableAttributedString(attributedString: attributedText)
@@ -268,6 +278,19 @@ public final class ITextShimmerLabel: UILabel {
         shimmerOverlayLabel.preferredMaxLayoutWidth = preferredMaxLayoutWidth
         shimmerOverlayLabel.adjustsFontForContentSizeCategory =
             adjustsFontForContentSizeCategory
+    }
+
+    private func highlightedStyle(
+        _ style: ITextUIKitStyle?,
+        color: UIColor
+    ) -> ITextUIKitStyle? {
+        guard let style else { return nil }
+        return ITextUIKitStyle(
+            fill: style.fill.map { _ in .solid(color) },
+            stroke: style.stroke.map {
+                ITextStroke(paint: .solid(color), width: $0.width)
+            }
+        )
     }
 
     /// Reconciles requested state with content, layout, lifecycle, and accessibility.

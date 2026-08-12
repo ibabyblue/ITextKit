@@ -35,6 +35,18 @@ public final class ITextRotatorView: UIView {
         }
     }
 
+    /// Shared fill and outline applied to both transition labels.
+    public var textStyle: ITextUIKitStyle? {
+        didSet {
+            guard textStyle != oldValue else { return }
+            for label in [currentLabel, nextLabel] {
+                label.textStyle = textStyle
+            }
+            invalidateIntrinsicContentSize()
+            setNeedsLayout()
+        }
+    }
+
     /// The action invoked after a new text finishes settling.
     ///
     /// Initial display, pausing, and stopping an in-flight transition remain silent.
@@ -77,10 +89,10 @@ public final class ITextRotatorView: UIView {
     private var storedAttributedTexts: [NSAttributedString] = []
 
     /// The last fully settled text label.
-    private let currentLabel = UILabel()
+    private let currentLabel = ITextStyledLabel()
 
     /// The text label entering during a transition.
-    private let nextLabel = UILabel()
+    private let nextLabel = ITextStyledLabel()
 
     /// Shared deterministic timing engine.
     private let engine = _ITextRotatorEngine(
@@ -364,6 +376,7 @@ public final class ITextRotatorView: UIView {
         for label in [currentLabel, nextLabel] {
             label.font = font
             label.textColor = textColor
+            label.textStyle = textStyle
             label.textAlignment = textAlignment
             label.numberOfLines = numberOfLines
             label.lineBreakMode = lineBreakMode

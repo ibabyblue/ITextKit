@@ -4,6 +4,29 @@ import XCTest
 
 @MainActor
 final class ITextShimmerLabelTests: XCTestCase {
+    func testStyledShimmerMirrorsFillAndStrokeIntoOneStyledOverlay() throws {
+        let style = ITextUIKitStyle(
+            fill: .linearGradient(.init(colors: [.red, .blue])),
+            stroke: .init(
+                paint: .linearGradient(.init(colors: [.white, .black])),
+                width: 2
+            )
+        )
+        let label = ITextShimmerLabel()
+        label.highlightColor = .systemYellow
+        label.textStyle = style
+        label.text = "Styled shimmer"
+
+        let overlay = try XCTUnwrap(
+            label.subviews.compactMap { $0 as? ITextStyledLabel }.first
+        )
+        XCTAssertEqual(label.textStyle, style)
+        XCTAssertEqual(overlay.textStyle?.stroke?.width, 2)
+        XCTAssertNotNil(overlay.textStyle?.fill)
+        XCTAssertTrue(label.isAccessibilityElement)
+        XCTAssertFalse(overlay.isAccessibilityElement)
+    }
+
     func testPublicDefaultsAndPlainTextSynchronization() throws {
         let label = ITextShimmerLabel()
         label.text = "Working…"

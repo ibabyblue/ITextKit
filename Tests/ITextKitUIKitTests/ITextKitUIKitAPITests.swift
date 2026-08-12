@@ -4,6 +4,97 @@ import XCTest
 
 @MainActor
 final class ITextKitUIKitAPITests: XCTestCase {
+    func testSharedStylePropagatesToEveryUIKitEffectLabel() {
+        let style = ITextUIKitStyle(
+            fill: .linearGradient(.init(colors: [.red, .blue])),
+            stroke: .init(
+                paint: .linearGradient(.init(colors: [.white, .black])),
+                width: 2
+            )
+        )
+        let rotator = ITextRotatorView(
+            texts: ["One", "Two"],
+            playbackState: .paused
+        )
+        let marquee = ITextMarqueeView(
+            text: "A long styled marquee",
+            playbackState: .paused
+        )
+        let typewriter = ITextTypewriterView(text: "Styled typing")
+
+        rotator.textStyle = style
+        marquee.textStyle = style
+        typewriter.textStyle = style
+
+        XCTAssertEqual(rotator.textStyle, style)
+        XCTAssertEqual(marquee.textStyle, style)
+        XCTAssertEqual(typewriter.textStyle, style)
+        XCTAssertTrue(rotator.subviews.allSatisfy { $0 is ITextStyledLabel })
+        XCTAssertTrue(marquee.subviews.allSatisfy { $0 is ITextStyledLabel })
+        XCTAssertTrue(typewriter.subviews.allSatisfy { $0 is ITextStyledLabel })
+        XCTAssertTrue([rotator, marquee, typewriter].allSatisfy { view in
+            view.subviews
+                .compactMap { $0 as? ITextStyledLabel }
+                .allSatisfy { $0.textStyle == style }
+        })
+    }
+
+    func testMarqueePaintOnlyStyleChangePreservesOffsetAndPause() throws {
+        let view = ITextMarqueeView(
+            text: "A long styled marquee that overflows",
+            configuration: .init(speed: 100, spacing: 20, initialDelay: 0),
+            playbackState: .playing
+        )
+        view.frame = CGRect(x: 0, y: 0, width: 50, height: 40)
+        view.textStyle = .init(
+            fill: .solid(.red),
+            stroke: .init(paint: .solid(.black), width: 1)
+        )
+        view.layoutIfNeeded()
+        let engine = try XCTUnwrap(
+            Mirror(reflecting: view).descendant("engine") as? _ITextMarqueeEngine
+        )
+        engine.setEnvironmentActive(true)
+        engine.advance(by: 0.2)
+        let offset = engine.snapshot.offset
+        view.pause()
+
+        view.textStyle = .init(
+            fill: .solid(.blue),
+            stroke: .init(paint: .solid(.white), width: 1)
+        )
+
+        XCTAssertEqual(engine.snapshot.offset, offset)
+        XCTAssertEqual(view.playbackState, .paused)
+    }
+
+    func testMarqueeStrokeWidthChangeRestartsAtLeadingAndPreservesPause() throws {
+        let view = ITextMarqueeView(
+            text: "A long styled marquee that overflows",
+            configuration: .init(speed: 100, spacing: 20, initialDelay: 0),
+            playbackState: .playing
+        )
+        view.frame = CGRect(x: 0, y: 0, width: 50, height: 40)
+        view.textStyle = .init(
+            stroke: .init(paint: .solid(.black), width: 1)
+        )
+        view.layoutIfNeeded()
+        let engine = try XCTUnwrap(
+            Mirror(reflecting: view).descendant("engine") as? _ITextMarqueeEngine
+        )
+        engine.setEnvironmentActive(true)
+        engine.advance(by: 0.2)
+        XCTAssertGreaterThan(engine.snapshot.offset, 0)
+        view.pause()
+
+        view.textStyle = .init(
+            stroke: .init(paint: .solid(.black), width: 2)
+        )
+
+        XCTAssertEqual(engine.snapshot.offset, 0)
+        XCTAssertEqual(view.playbackState, .paused)
+    }
+
     func testRotatorMovesOutgoingTextUpAndIncomingTextFromBelowWhileCrossFading() throws {
         let view = ITextRotatorView(
             texts: ["First", "Second"],
