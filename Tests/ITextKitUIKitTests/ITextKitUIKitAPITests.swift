@@ -161,6 +161,14 @@ final class ITextKitUIKitAPITests: XCTestCase {
         XCTAssertNil(view.attributedTexts[0].attribute(.foregroundColor, at: 0, effectiveRange: nil))
     }
 
+    func testRotatorResizesWhenInheritedContentSizeCategoryChanges() {
+        let view = ITextRotatorView(texts: ["Dynamic type"], playbackState: .paused)
+        view.font = .preferredFont(forTextStyle: .body)
+        view.adjustsFontForContentSizeCategory = true
+
+        assertViewResizesForInheritedContentSizeCategory(view)
+    }
+
     func testMarqueePublicStylePlaybackAndAccessibility() {
         let view = ITextMarqueeView(
             text: "A long marquee line that should overflow this narrow viewport",
@@ -191,6 +199,38 @@ final class ITextKitUIKitAPITests: XCTestCase {
         XCTAssertEqual(view.playbackState, .playing)
         view.stop()
         XCTAssertEqual(view.playbackState, .stopped)
+    }
+
+    func testMarqueeInheritsRightToLeftLayoutDirectionFromSuperview() throws {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 80))
+        let host = UIViewController()
+        let child = UIViewController()
+        host.addChild(child)
+        host.view.addSubview(child.view)
+        child.view.frame = host.view.bounds
+        child.didMove(toParent: host)
+        host.setOverrideTraitCollection(
+            UITraitCollection(layoutDirection: .rightToLeft),
+            forChild: child
+        )
+        window.rootViewController = host
+
+        let view = ITextMarqueeView(
+            text: "A long marquee line that overflows its viewport",
+            configuration: .init(speed: 30, spacing: 24, initialDelay: 0),
+            playbackState: .paused
+        )
+        view.frame = CGRect(x: 0, y: 0, width: 80, height: 30)
+        child.view.addSubview(view)
+        window.makeKeyAndVisible()
+        host.view.layoutIfNeeded()
+        child.view.layoutIfNeeded()
+        view.layoutIfNeeded()
+
+        XCTAssertEqual(view.effectiveUserInterfaceLayoutDirection, .rightToLeft)
+        let labels = try XCTUnwrap(view.subviews as? [UILabel])
+        XCTAssertEqual(labels.count, 2)
+        XCTAssertLessThan(labels[1].frame.minX, labels[0].frame.minX)
     }
 
     func testMarqueeAttributedContentUsesNativeWidthAndImmutableSnapshot() {
@@ -246,6 +286,14 @@ final class ITextKitUIKitAPITests: XCTestCase {
         XCTAssertEqual(engine.snapshot.offset, 0)
         XCTAssertEqual(view.playbackState, .paused)
         XCTAssertEqual(view.accessibilityLabel, view.text)
+    }
+
+    func testMarqueeResizesWhenInheritedContentSizeCategoryChanges() {
+        let view = ITextMarqueeView(text: "Dynamic type", playbackState: .paused)
+        view.font = .preferredFont(forTextStyle: .body)
+        view.adjustsFontForContentSizeCategory = true
+
+        assertViewResizesForInheritedContentSizeCategory(view)
     }
 
     func testTypewriterPlainAPIStartsWhenEnvironmentBecomesActive() throws {
@@ -436,6 +484,48 @@ final class ITextKitUIKitAPITests: XCTestCase {
         ))
         XCTAssertLessThan(constrained.width, natural.width)
         XCTAssertGreaterThan(constrained.height, natural.height)
+    }
+
+    private func assertViewResizesForInheritedContentSizeCategory(
+        _ view: UIView,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 200))
+        let host = UIViewController()
+        let child = UIViewController()
+        host.addChild(child)
+        host.view.addSubview(child.view)
+        child.view.frame = host.view.bounds
+        child.didMove(toParent: host)
+        window.rootViewController = host
+
+        view.translatesAutoresizingMaskIntoConstraints = false
+        child.view.addSubview(view)
+        NSLayoutConstraint.activate([
+            view.leadingAnchor.constraint(equalTo: child.view.leadingAnchor),
+            view.topAnchor.constraint(equalTo: child.view.topAnchor),
+            view.widthAnchor.constraint(equalToConstant: 200)
+        ])
+
+        host.setOverrideTraitCollection(
+            UITraitCollection(preferredContentSizeCategory: .extraSmall),
+            forChild: child
+        )
+        window.makeKeyAndVisible()
+        host.view.layoutIfNeeded()
+        child.view.layoutIfNeeded()
+        let smallHeight = view.bounds.height
+
+        host.setOverrideTraitCollection(
+            UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge),
+            forChild: child
+        )
+        host.view.layoutIfNeeded()
+        child.view.layoutIfNeeded()
+
+        XCTAssertGreaterThan(view.bounds.height, smallHeight, file: file, line: line)
+        window.isHidden = true
     }
 
 }

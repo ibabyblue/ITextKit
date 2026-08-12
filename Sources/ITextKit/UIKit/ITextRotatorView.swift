@@ -92,6 +92,11 @@ public final class ITextRotatorView: UIView {
     /// Display-link clock active only while timing can advance.
     private let displayLink = _ITextDisplayLinkDriver()
 
+    /// Scene-aware lifecycle source shared with the other UIKit timing controls.
+    private lazy var sceneLifecycleObserver = _ITextUIKitSceneLifecycleObserver { [weak self] isActive in
+        self?.applyEnvironmentState(isActive)
+    }
+
     /// Latest transition state rendered by the labels.
     private var snapshot = _ITextRotatorSnapshot(
         currentIndex: 0,
@@ -102,9 +107,6 @@ public final class ITextRotatorView: UIView {
 
     /// Last bounds width used for multiline intrinsic-height measurement.
     private var lastMeasuredBoundsWidth: CGFloat = 0
-
-    /// Whether application lifecycle currently permits advancement.
-    private var applicationIsActive = true
 
     /// Creates an empty rotating text view.
     ///
@@ -244,7 +246,23 @@ public final class ITextRotatorView: UIView {
     /// Updates window-driven playback eligibility without changing explicit state.
     public override func didMoveToWindow() {
         super.didMoveToWindow()
-        applyEnvironmentState()
+        sceneLifecycleObserver.updateWindow(window)
+    }
+
+    /// Remeasures preferred-font content after the inherited Dynamic Type category changes.
+    ///
+    /// - Parameter previousTraitCollection: Traits active before the change.
+    public override func traitCollectionDidChange(
+        _ previousTraitCollection: UITraitCollection?
+    ) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard adjustsFontForContentSizeCategory,
+              previousTraitCollection?.preferredContentSizeCategory
+                != traitCollection.preferredContentSizeCategory else {
+            return
+        }
+        invalidateIntrinsicContentSize()
+        setNeedsLayout()
     }
 
     /// Installs labels, callbacks, accessibility, and lifecycle observation.
@@ -261,7 +279,6 @@ public final class ITextRotatorView: UIView {
         }
         synchronizeLabelStyle()
 
-        applicationIsActive = UIApplication.shared.applicationState == .active
         engine.onSnapshotChanged = { [weak self] snapshot in
             self?.applySnapshot(snapshot)
             self?.reconcileDisplayLink()
@@ -274,18 +291,6 @@ public final class ITextRotatorView: UIView {
             self?.engine.advance(by: elapsed)
         }
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationDidBecomeActive),
-            name: UIApplication.didBecomeActiveNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationWillResignActive),
-            name: UIApplication.willResignActiveNotification,
-            object: nil
-        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(reduceMotionDidChange),
@@ -405,9 +410,9 @@ public final class ITextRotatorView: UIView {
         )
     }
 
-    /// Applies current window and application visibility to the timing engine.
-    private func applyEnvironmentState() {
-        engine.setEnvironmentActive(window != nil && applicationIsActive)
+    /// Applies current window-scene visibility to the timing engine.
+    private func applyEnvironmentState(_ isActive: Bool) {
+        engine.setEnvironmentActive(isActive)
         reconcileDisplayLink()
     }
 
@@ -418,18 +423,6 @@ public final class ITextRotatorView: UIView {
         } else {
             displayLink.stop()
         }
-    }
-
-    /// Continues lifecycle-suspended progress when the application becomes active.
-    @objc private func applicationDidBecomeActive() {
-        applicationIsActive = true
-        applyEnvironmentState()
-    }
-
-    /// Freezes lifecycle-suspended progress before the application resigns active.
-    @objc private func applicationWillResignActive() {
-        applicationIsActive = false
-        applyEnvironmentState()
     }
 
     /// Re-renders an in-flight transition using the current motion preference.

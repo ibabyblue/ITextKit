@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import XCTest
 @testable import ITextKit
 
@@ -121,4 +122,55 @@ final class ITextKitSwiftUIAPITests: XCTestCase {
         model.setVisible(false, sceneIsActive: false)
     }
 
+    func testMountedRotatorUsesLatestChangeCallback() {
+        let state = ITextRotatorCallbackTestState()
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 100))
+        let host = UIHostingController(rootView: ITextRotatorCallbackTestView(state: state))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+
+        let callbackDeadline = Date().addingTimeInterval(2)
+        while state.firstCallbackCount == 0, Date() < callbackDeadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        }
+        XCTAssertGreaterThan(state.firstCallbackCount, 0)
+
+        state.usesSecondCallback = true
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        let firstCountAfterUpdate = state.firstCallbackCount
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+
+        XCTAssertEqual(state.firstCallbackCount, firstCountAfterUpdate)
+        XCTAssertGreaterThan(state.secondCallbackCount, 0)
+        window.isHidden = true
+    }
+
+}
+
+@MainActor
+private final class ITextRotatorCallbackTestState: ObservableObject {
+    @Published var usesSecondCallback = false
+    var firstCallbackCount = 0
+    var secondCallbackCount = 0
+}
+
+@MainActor
+private struct ITextRotatorCallbackTestView: View {
+    @ObservedObject var state: ITextRotatorCallbackTestState
+
+    var body: some View {
+        let usesSecondCallback = state.usesSecondCallback
+        ITextRotator(
+            texts: ["First", "Second"],
+            configuration: .init(interval: 0.03, transitionDuration: 0)
+        )
+        .onTextRotatorChange { _, _ in
+            if usesSecondCallback {
+                state.secondCallbackCount += 1
+            } else {
+                state.firstCallbackCount += 1
+            }
+        }
+        .environment(\.scenePhase, .active)
+    }
 }

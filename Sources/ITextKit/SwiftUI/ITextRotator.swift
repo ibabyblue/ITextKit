@@ -123,6 +123,9 @@ public struct ITextRotator: View {
         .onChange(of: playbackState) { value in
             model.setPlaybackState(value)
         }
+        .onReceive(model.settledTexts) { index, text in
+            onTextChange?(index, text)
+        }
     }
 
     /// Registers an action that runs after a new text finishes its transition.
@@ -145,7 +148,6 @@ public struct ITextRotator: View {
         model.updateAttributedTexts(attributedTexts)
         model.updateConfiguration(configuration)
         model.setPlaybackState(playbackState)
-        model.onTextChange = onTextChange
     }
 }
 
@@ -175,8 +177,8 @@ private final class _ITextRotatorObservable: ObservableObject {
     /// Latest state published to the view.
     @Published private(set) var snapshot: _ITextRotatorSnapshot
 
-    /// Action invoked after a new text settles.
-    var onTextChange: ((Int, String) -> Void)?
+    /// Emits the settled index and text to the currently rendered SwiftUI callback modifier.
+    let settledTexts = PassthroughSubject<(Int, String), Never>()
 
     /// Framework-independent timing engine.
     private let engine: _ITextRotatorEngine
@@ -214,7 +216,7 @@ private final class _ITextRotatorObservable: ObservableObject {
         }
         engine.onItemSettled = { [weak self] index in
             guard let self, self.attributedTexts.indices.contains(index) else { return }
-            self.onTextChange?(index, String(self.attributedTexts[index].characters))
+            self.settledTexts.send((index, String(self.attributedTexts[index].characters)))
         }
         displayLink.onFrame = { [weak self] elapsed in
             self?.engine.advance(by: elapsed)

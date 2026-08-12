@@ -2,6 +2,15 @@
 
 All notable changes to ITextKit are documented in this file.
 
+## 0.2.2 - 2026-08-12
+
+### Fixed
+
+- UIKit marquee direction now follows inherited layout-direction traits.
+- UIKit rotator, marquee, and typewriter timing now suspends per owning window scene, with application lifecycle fallback for apps without scenes.
+- UIKit rotator and marquee now remeasure when their inherited Dynamic Type category changes.
+- SwiftUI rotator change handlers now use the latest closure while the view remains mounted.
+
 ## 0.2.1 - 2026-08-10
 
 ### Added

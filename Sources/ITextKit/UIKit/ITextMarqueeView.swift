@@ -77,6 +77,11 @@ public final class ITextMarqueeView: UIView {
     /// Display-link clock active only while motion can advance.
     private let displayLink = _ITextDisplayLinkDriver()
 
+    /// Scene-aware lifecycle source shared with the other UIKit timing controls.
+    private lazy var sceneLifecycleObserver = _ITextUIKitSceneLifecycleObserver { [weak self] isActive in
+        self?.applyEnvironmentState(isActive)
+    }
+
     /// Latest deterministic motion state.
     private var snapshot = _ITextMarqueeSnapshot(
         offset: 0,
@@ -89,9 +94,6 @@ public final class ITextMarqueeView: UIView {
 
     /// Last physical layout direction used to place copies.
     private var lastLayoutDirection: UIUserInterfaceLayoutDirection?
-
-    /// Whether application lifecycle currently permits advancement.
-    private var applicationIsActive = true
 
     /// Creates an empty marquee view.
     ///
@@ -184,9 +186,7 @@ public final class ITextMarqueeView: UIView {
         engine.updateMetrics(contentWidth: contentWidth, viewportWidth: bounds.width)
         snapshot = engine.snapshot
 
-        let direction = UIView.userInterfaceLayoutDirection(
-            for: semanticContentAttribute
-        )
+        let direction = effectiveUserInterfaceLayoutDirection
         if direction != lastLayoutDirection {
             lastLayoutDirection = direction
             engine.restart()
@@ -227,7 +227,25 @@ public final class ITextMarqueeView: UIView {
     /// Updates window-driven playback eligibility without changing explicit state.
     public override func didMoveToWindow() {
         super.didMoveToWindow()
-        applyEnvironmentState()
+        sceneLifecycleObserver.updateWindow(window)
+    }
+
+    /// Remeasures preferred-font content and restarts geometry-dependent motion after a Dynamic
+    /// Type category change inherited from the view hierarchy.
+    ///
+    /// - Parameter previousTraitCollection: Traits active before the change.
+    public override func traitCollectionDidChange(
+        _ previousTraitCollection: UITraitCollection?
+    ) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard adjustsFontForContentSizeCategory,
+              previousTraitCollection?.preferredContentSizeCategory
+                != traitCollection.preferredContentSizeCategory else {
+            return
+        }
+        invalidateIntrinsicContentSize()
+        engine.restart()
+        setNeedsLayout()
     }
 
     /// Installs labels, callbacks, accessibility, and lifecycle observation.
@@ -246,7 +264,6 @@ public final class ITextMarqueeView: UIView {
         synchronizeLabelStyle(restartMotion: false)
         synchronizeLabelContent()
 
-        applicationIsActive = UIApplication.shared.applicationState == .active
         engine.onSnapshotChanged = { [weak self] snapshot in
             self?.applySnapshot(snapshot)
             self?.reconcileDisplayLink()
@@ -255,18 +272,6 @@ public final class ITextMarqueeView: UIView {
             self?.engine.advance(by: elapsed)
         }
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationDidBecomeActive),
-            name: UIApplication.didBecomeActiveNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationWillResignActive),
-            name: UIApplication.willResignActiveNotification,
-            object: nil
-        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(reduceMotionDidChange),
@@ -386,9 +391,9 @@ public final class ITextMarqueeView: UIView {
         )
     }
 
-    /// Applies current window and application visibility to the timing engine.
-    private func applyEnvironmentState() {
-        engine.setEnvironmentActive(window != nil && applicationIsActive)
+    /// Applies current window-scene visibility to the timing engine.
+    private func applyEnvironmentState(_ isActive: Bool) {
+        engine.setEnvironmentActive(isActive)
         engine.setMotionAllowed(!UIAccessibility.isReduceMotionEnabled)
         reconcileDisplayLink()
     }
@@ -400,18 +405,6 @@ public final class ITextMarqueeView: UIView {
         } else {
             displayLink.stop()
         }
-    }
-
-    /// Continues lifecycle-suspended progress when the application becomes active.
-    @objc private func applicationDidBecomeActive() {
-        applicationIsActive = true
-        applyEnvironmentState()
-    }
-
-    /// Freezes lifecycle-suspended progress before the application resigns active.
-    @objc private func applicationWillResignActive() {
-        applicationIsActive = false
-        applyEnvironmentState()
     }
 
     /// Applies current Reduce Motion behavior and reconciles frame delivery.

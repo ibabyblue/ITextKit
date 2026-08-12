@@ -85,14 +85,16 @@ public final class ITextTypewriterView: UIView {
     /// Display-link clock active only while another unit can become visible.
     private let displayLink = _ITextDisplayLinkDriver()
 
+    /// Scene-aware lifecycle source shared with the other UIKit timing controls.
+    private lazy var sceneLifecycleObserver = _ITextUIKitSceneLifecycleObserver { [weak self] isActive in
+        self?.applyEnvironmentState(isActive)
+    }
+
     /// Latest reveal state rendered by the label.
     private var snapshot = _ITextTypewriterSnapshot(revealedCount: 0, unitCount: 0)
 
     /// Last width used for wrapping-dependent intrinsic height.
     private var lastMeasuredBoundsWidth: CGFloat = 0
-
-    /// Whether application lifecycle currently permits advancement.
-    private var applicationIsActive = true
 
     /// Creates an empty typewriter view.
     ///
@@ -180,7 +182,7 @@ public final class ITextTypewriterView: UIView {
     /// Applies window-driven timing eligibility.
     public override func didMoveToWindow() {
         super.didMoveToWindow()
-        applyEnvironmentState()
+        sceneLifecycleObserver.updateWindow(window)
     }
 
     /// Installs the label, deterministic callbacks, accessibility, and lifecycle observation.
@@ -196,7 +198,6 @@ public final class ITextTypewriterView: UIView {
         addSubview(label)
         synchronizeLabelStyle()
 
-        applicationIsActive = UIApplication.shared.applicationState == .active
         engine.onSnapshotChanged = { [weak self] snapshot in
             self?.applySnapshot(snapshot)
             self?.reconcileDisplayLink()
@@ -205,18 +206,6 @@ public final class ITextTypewriterView: UIView {
             self?.engine.advance(by: elapsed)
         }
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationDidBecomeActive),
-            name: UIApplication.didBecomeActiveNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationWillResignActive),
-            name: UIApplication.willResignActiveNotification,
-            object: nil
-        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(reduceMotionDidChange),
@@ -303,9 +292,9 @@ public final class ITextTypewriterView: UIView {
         return CGSize(width: natural.width, height: ceil(measured.height))
     }
 
-    /// Projects window and application visibility into the independent engine.
-    private func applyEnvironmentState() {
-        engine.setEnvironmentActive(window != nil && applicationIsActive)
+    /// Projects window-scene visibility into the independent engine.
+    private func applyEnvironmentState(_ isActive: Bool) {
+        engine.setEnvironmentActive(isActive)
         applySnapshot(engine.snapshot)
         reconcileDisplayLink()
     }
@@ -317,18 +306,6 @@ public final class ITextTypewriterView: UIView {
         } else {
             displayLink.stop()
         }
-    }
-
-    /// Continues lifecycle-suspended progress when the application becomes active.
-    @objc private func applicationDidBecomeActive() {
-        applicationIsActive = true
-        applyEnvironmentState()
-    }
-
-    /// Freezes lifecycle-suspended progress before the application resigns active.
-    @objc private func applicationWillResignActive() {
-        applicationIsActive = false
-        applyEnvironmentState()
     }
 
     /// Reveals complete content when Reduce Motion becomes enabled without replaying on disable.
