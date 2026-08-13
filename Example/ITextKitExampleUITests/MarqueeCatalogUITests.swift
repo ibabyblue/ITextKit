@@ -10,6 +10,35 @@ final class MarqueeCatalogUITests: ITextKitExampleUITestCase {
         }
     }
 
+    func testSwiftUIPlaybackSnippetUsesDeclarativePublicAPI() {
+        let app = open("Marquee")
+        let code = app.descendants(matching: .any)[
+            "code.swiftui.marquee.playback"
+        ]
+        XCTAssertTrue(code.exists)
+        XCTAssertTrue(code.label.contains("ITextPlaybackState"))
+        XCTAssertTrue(code.label.contains("playbackState:"))
+        XCTAssertFalse(code.label.contains(".start()"))
+        XCTAssertFalse(code.label.contains(".pause()"))
+    }
+
+    func testSwiftUICodeSamplesAreSelfContained() {
+        let app = open("Marquee")
+        let overflow = app.descendants(matching: .any)[
+            "code.swiftui.marquee.overflow"
+        ]
+        let attributed = app.descendants(matching: .any)[
+            "code.swiftui.marquee.attributed"
+        ]
+        let configured = app.descendants(matching: .any)[
+            "code.swiftui.marquee.configuration"
+        ]
+
+        XCTAssertTrue(overflow.label.contains("This long announcement"))
+        XCTAssertTrue(attributed.label.contains("var value = AttributedString"))
+        XCTAssertTrue(configured.label.contains("text: \"Configured marquee"))
+    }
+
     func testUIKitMarqueeTeachesInheritedRTLAndPlayback() {
         let app = open("Marquee View", inUIKit: true)
         assertSections(in: app)
