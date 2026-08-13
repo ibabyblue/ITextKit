@@ -24,6 +24,8 @@ struct SwiftUICatalogView: View {
             SwiftUIMarqueeExamplesView()
         case .typewriter:
             SwiftUITypewriterExamplesView()
+        case .shimmer:
+            SwiftUIShimmerExamplesView()
         default:
             SwiftUITopicIntroductionView(topic: topic)
         }
