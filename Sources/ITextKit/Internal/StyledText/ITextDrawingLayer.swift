@@ -2,6 +2,8 @@ import QuartzCore
 import UIKit
 
 final class _ITextDrawingLayer: CALayer {
+    private(set) var drawingGeneration: UInt64 = 0
+
     var plan: _ITextDrawingPlan? {
         didSet { setNeedsDisplay() }
     }
@@ -31,6 +33,7 @@ final class _ITextDrawingLayer: CALayer {
     }
 
     override func draw(in context: CGContext) {
+        drawingGeneration &+= 1
         plan?.draw(in: context)
     }
 }

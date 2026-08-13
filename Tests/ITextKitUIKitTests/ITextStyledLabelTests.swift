@@ -104,4 +104,43 @@ final class ITextStyledLabelTests: XCTestCase {
 
         XCTAssertEqual(label.intrinsicContentSize, .zero)
     }
+
+    func testEqualAssignmentsDoNotInvalidateLayoutOrDrawing() {
+        let label = ITextStyledLabel(
+            frame: CGRect(x: 0, y: 0, width: 260, height: 44)
+        )
+        label.text = "Gradient marquee"
+        label.font = .systemFont(ofSize: 20, weight: .bold)
+        label.numberOfLines = 1
+        label.lineBreakMode = .byClipping
+        label.textStyle = .init(
+            fill: .linearGradient(.init(colors: [.systemPink, .systemOrange])),
+            stroke: .init(
+                paint: .linearGradient(.init(colors: [.white, .black])),
+                width: 1
+            )
+        )
+        label.layoutIfNeeded()
+        label.layer.displayIfNeeded()
+        let layoutGeneration = label._layoutGeneration
+        let drawingGeneration = label._drawingGeneration
+        let text = label.text
+        let font = label.font
+        let numberOfLines = label.numberOfLines
+        let lineBreakMode = label.lineBreakMode
+        let textAlignment = label.textAlignment
+        let textStyle = label.textStyle
+
+        label.text = text
+        label.font = font
+        label.numberOfLines = numberOfLines
+        label.lineBreakMode = lineBreakMode
+        label.textAlignment = textAlignment
+        label.textStyle = textStyle
+        label.layoutIfNeeded()
+        label.layer.displayIfNeeded()
+
+        XCTAssertEqual(label._layoutGeneration, layoutGeneration)
+        XCTAssertEqual(label._drawingGeneration, drawingGeneration)
+    }
 }

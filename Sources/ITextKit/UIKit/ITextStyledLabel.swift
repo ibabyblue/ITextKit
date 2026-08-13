@@ -14,6 +14,7 @@ public class ITextStyledLabel: UILabel {
     /// centered `2w` vector stroke is rendered first, then covered by the fill.
     public var textStyle: ITextUIKitStyle? {
         didSet {
+            guard textStyle != oldValue else { return }
             guard oldValue != nil, textStyle != nil else {
                 invalidateStyledLayout()
                 return
@@ -31,11 +32,21 @@ public class ITextStyledLabel: UILabel {
     /// Optional full-text reference used only for stable gradient coordinates.
     /// Visible content, size, baseline, and accessibility remain unchanged.
     var _gradientReferenceAttributedText: NSAttributedString? {
-        didSet { invalidateStyledPaint() }
+        didSet {
+            guard !Self.attributedStringsAreEqual(
+                _gradientReferenceAttributedText,
+                oldValue
+            ) else { return }
+            invalidateStyledPaint()
+        }
     }
 
     var _layoutGeneration: UInt64 {
         currentLayout?.layoutGeneration ?? 0
+    }
+
+    var _drawingGeneration: UInt64 {
+        drawingLayer.drawingGeneration
     }
 
     private let layoutEngine = _ITextLayoutEngine()
@@ -56,63 +67,110 @@ public class ITextStyledLabel: UILabel {
     }
 
     public override var text: String? {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard text != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var attributedText: NSAttributedString? {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard !Self.attributedStringsAreEqual(attributedText, oldValue) else {
+                return
+            }
+            invalidateStyledLayout()
+        }
     }
 
     public override var font: UIFont! {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard font != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var textColor: UIColor! {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard textColor != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var numberOfLines: Int {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard numberOfLines != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var lineBreakMode: NSLineBreakMode {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard lineBreakMode != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var textAlignment: NSTextAlignment {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard textAlignment != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var baselineAdjustment: UIBaselineAdjustment {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard baselineAdjustment != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var adjustsFontSizeToFitWidth: Bool {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard adjustsFontSizeToFitWidth != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var minimumScaleFactor: CGFloat {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard minimumScaleFactor != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var allowsDefaultTighteningForTruncation: Bool {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard allowsDefaultTighteningForTruncation != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var preferredMaxLayoutWidth: CGFloat {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard preferredMaxLayoutWidth != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var shadowColor: UIColor? {
-        didSet { invalidateStyledPaint() }
+        didSet {
+            guard shadowColor != oldValue else { return }
+            invalidateStyledPaint()
+        }
     }
 
     public override var shadowOffset: CGSize {
-        didSet { invalidateStyledPaint() }
+        didSet {
+            guard shadowOffset != oldValue else { return }
+            invalidateStyledPaint()
+        }
     }
 
     public override var semanticContentAttribute: UISemanticContentAttribute {
-        didSet { invalidateStyledLayout() }
+        didSet {
+            guard semanticContentAttribute != oldValue else { return }
+            invalidateStyledLayout()
+        }
     }
 
     public override var intrinsicContentSize: CGSize {
@@ -315,5 +373,19 @@ public class ITextStyledLabel: UILabel {
         style?._resolved(
             isRightToLeft: effectiveUserInterfaceLayoutDirection == .rightToLeft
         ).stroke?.outwardWidth ?? 0
+    }
+
+    private static func attributedStringsAreEqual(
+        _ lhs: NSAttributedString?,
+        _ rhs: NSAttributedString?
+    ) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return true
+        case let (lhs?, rhs?):
+            return lhs.isEqual(to: rhs)
+        default:
+            return false
+        }
     }
 }
