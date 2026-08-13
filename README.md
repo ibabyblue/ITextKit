@@ -4,7 +4,7 @@ Native text motion controls for SwiftUI and UIKit, delivered as one Swift Packag
 
 ![iOS 15+](https://img.shields.io/badge/iOS-15%2B-blue)
 ![Swift 5.10+](https://img.shields.io/badge/Swift-5.10%2B-orange)
-![Release 0.2.2](https://img.shields.io/badge/release-0.2.2-purple)
+![Release 0.3.0](https://img.shields.io/badge/release-0.3.0-purple)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -42,7 +42,7 @@ For a `Package.swift` dependency:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.2.2")
+    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.3.0")
 ]
 ```
 

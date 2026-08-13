@@ -2,7 +2,7 @@
 
 All notable changes to ITextKit are documented in this file.
 
-## Unreleased
+## 0.3.0 - 2026-08-13
 
 ### Added
 
