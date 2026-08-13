@@ -29,12 +29,12 @@ public final class ITextMarqueeView: UIView {
     public var configuration: ITextMarqueeConfiguration = .default {
         didSet {
             guard configuration != oldValue else { return }
+            animationNeedsRebuild = true
             if configuration.resolved.spacing != oldValue.resolved.spacing {
                 geometryIsDirty = true
             }
             engine.updateConfiguration(configuration.resolved)
             applySnapshot(engine.snapshot)
-            reconcileDisplayLink()
             setNeedsLayout()
         }
     }
@@ -99,8 +99,8 @@ public final class ITextMarqueeView: UIView {
         playbackState: .playing
     )
 
-    /// Display-link clock active only while motion can advance.
-    private let displayLink = _ITextDisplayLinkDriver()
+    /// Compositor adapter that owns the motion container's single travel animation.
+    private let layerAnimator = _ITextMarqueeLayerAnimator()
 
     /// Scene-aware lifecycle source shared with the other UIKit timing controls.
     private lazy var sceneLifecycleObserver = _ITextUIKitSceneLifecycleObserver { [weak self] isActive in
@@ -134,6 +134,9 @@ public final class ITextMarqueeView: UIView {
 
     /// Presentation mode used when the current copy frames were prepared.
     private var preparedForMovingPresentation: Bool?
+
+    /// Whether the next eligible active presentation must install a fresh travel plan.
+    private var animationNeedsRebuild = true
 
     /// Number of full untruncated measurements performed by this view.
     private(set) var _measurementGeneration: UInt64 = 0
@@ -234,6 +237,8 @@ public final class ITextMarqueeView: UIView {
         if direction != lastLayoutDirection {
             lastLayoutDirection = direction
             geometryIsDirty = true
+            animationNeedsRebuild = true
+            layerAnimator.stop()
             engine.restart()
             snapshot = engine.snapshot
         }
@@ -251,12 +256,12 @@ public final class ITextMarqueeView: UIView {
         let shouldMove = shouldMove(using: snapshot)
 
         if shouldMove {
-            showMovingLabels(direction: direction)
+            showMovingLabels()
         } else {
             showStaticLabel()
         }
         accessibilityLabel = storedAttributedText.string
-        reconcileDisplayLink()
+        reconcileLayerAnimation()
     }
 
     /// The natural single-line text size.
@@ -290,9 +295,12 @@ public final class ITextMarqueeView: UIView {
         _ previousTraitCollection: UITraitCollection?
     ) {
         super.traitCollectionDidChange(previousTraitCollection)
-        guard adjustsFontForContentSizeCategory,
-              previousTraitCollection?.preferredContentSizeCategory
-                != traitCollection.preferredContentSizeCategory else {
+        let contentSizeChanged = adjustsFontForContentSizeCategory
+            && previousTraitCollection?.preferredContentSizeCategory
+                != traitCollection.preferredContentSizeCategory
+        let displayScaleChanged = previousTraitCollection != nil
+            && previousTraitCollection?.displayScale != traitCollection.displayScale
+        guard contentSizeChanged || displayScaleChanged else {
             return
         }
         invalidateIntrinsicContentSize()
@@ -323,10 +331,6 @@ public final class ITextMarqueeView: UIView {
 
         engine.onSnapshotChanged = { [weak self] snapshot in
             self?.applySnapshot(snapshot)
-            self?.reconcileDisplayLink()
-        }
-        displayLink.onFrame = { [weak self] elapsed in
-            self?.engine.advance(by: elapsed)
         }
 
         NotificationCenter.default.addObserver(
@@ -344,7 +348,7 @@ public final class ITextMarqueeView: UIView {
         engine.setPlaybackState(state)
         playbackState = state
         applySnapshot(engine.snapshot)
-        reconcileDisplayLink()
+        reconcileLayerAnimation()
     }
 
     /// Applies one deterministic render snapshot.
@@ -439,16 +443,12 @@ public final class ITextMarqueeView: UIView {
         repeatedLabel.isHidden = true
     }
 
-    /// Positions repeated full-width labels for the current semantic travel offset.
-    ///
-    /// - Parameter direction: Current physical interface direction.
-    private func showMovingLabels(direction: UIUserInterfaceLayoutDirection) {
+    /// Reveals the two fixed full-width labels prepared for compositor travel.
+    private func showMovingLabels() {
         primaryLabel.lineBreakMode = .byClipping
         repeatedLabel.lineBreakMode = .byClipping
         primaryLabel.isHidden = false
         repeatedLabel.isHidden = false
-
-        applyMotionTransform(direction: direction)
     }
 
     /// Rebuilds measurement and fixed copy frames after a real geometry change.
@@ -459,6 +459,7 @@ public final class ITextMarqueeView: UIView {
         engine.updateMetrics(contentWidth: contentWidth, viewportWidth: bounds.width)
         snapshot = engine.snapshot
         geometryIsDirty = false
+        animationNeedsRebuild = true
 
         let shouldMove = shouldMove(using: snapshot)
         preparedForMovingPresentation = shouldMove
@@ -489,30 +490,20 @@ public final class ITextMarqueeView: UIView {
 
     /// Applies the current state without measuring or changing copy frames.
     private func applyCurrentPresentation() {
-        let direction = effectiveUserInterfaceLayoutDirection
         let shouldMove = shouldMove(using: snapshot)
         if shouldMove {
-            showMovingLabels(direction: direction)
+            showMovingLabels()
         } else {
             showStaticLabel()
         }
-    }
-
-    /// Translates the fixed container while leaving prepared text contents untouched.
-    private func applyMotionTransform(direction: UIUserInterfaceLayoutDirection) {
-        let translation = direction == .rightToLeft
-            ? snapshot.offset
-            : -snapshot.offset
-        motionContainerView.transform = CGAffineTransform(
-            translationX: translation,
-            y: 0
-        )
+        reconcileLayerAnimation()
     }
 
     /// Resolves whether the current inputs require the repeated moving presentation.
     private func shouldMove(using snapshot: _ITextMarqueeSnapshot) -> Bool {
         snapshot.isOverflowing
             && configuration.resolved.speed > 0
+            && engine.isMotionAllowed
             && !UIAccessibility.isReduceMotionEnabled
             && snapshot.playbackState != .stopped
     }
@@ -521,21 +512,70 @@ public final class ITextMarqueeView: UIView {
     private func invalidateMeasurementAndGeometry() {
         measurementIsDirty = true
         geometryIsDirty = true
+        animationNeedsRebuild = true
+        layerAnimator.stop()
     }
 
     /// Applies current window-scene visibility to the timing engine.
     private func applyEnvironmentState(_ isActive: Bool) {
         engine.setEnvironmentActive(isActive)
         engine.setMotionAllowed(!UIAccessibility.isReduceMotionEnabled)
-        reconcileDisplayLink()
+        if !isActive, window == nil {
+            animationNeedsRebuild = true
+        }
+        reconcileLayerAnimation()
     }
 
-    /// Runs frame delivery only while elapsed time can change state.
-    private func reconcileDisplayLink() {
-        if engine.shouldAdvance {
-            displayLink.start()
-        } else {
-            displayLink.stop()
+    /// Applies one discrete engine/lifecycle transition to the compositor adapter.
+    private func reconcileLayerAnimation() {
+        guard !geometryIsDirty else { return }
+        let direction = effectiveUserInterfaceLayoutDirection
+        guard shouldMove(using: snapshot) else {
+            layerAnimator.stop()
+            return
+        }
+
+        guard engine.isEnvironmentActive else {
+            if window == nil {
+                layerAnimator.stop()
+                animationNeedsRebuild = true
+            } else if layerAnimator.hasActiveTravelAnimation {
+                layerAnimator.pause()
+            } else {
+                layerAnimator.present(
+                    offset: snapshot.offset,
+                    direction: direction,
+                    on: motionContainerView.layer
+                )
+            }
+            return
+        }
+
+        switch playbackState {
+        case .stopped:
+            layerAnimator.stop()
+        case .paused:
+            if layerAnimator.hasActiveTravelAnimation {
+                layerAnimator.pause()
+            } else {
+                layerAnimator.present(
+                    offset: snapshot.offset,
+                    direction: direction,
+                    on: motionContainerView.layer
+                )
+            }
+        case .playing:
+            if animationNeedsRebuild || !layerAnimator.hasActiveTravelAnimation {
+                guard let plan = engine.motionPlan else { return }
+                layerAnimator.install(
+                    on: motionContainerView.layer,
+                    plan: plan,
+                    direction: direction
+                )
+                animationNeedsRebuild = false
+            } else {
+                layerAnimator.resume()
+            }
         }
     }
 
@@ -543,7 +583,35 @@ public final class ITextMarqueeView: UIView {
     @objc private func reduceMotionDidChange() {
         engine.setMotionAllowed(!UIAccessibility.isReduceMotionEnabled)
         snapshot = engine.snapshot
-        reconcileDisplayLink()
+        animationNeedsRebuild = true
+        reconcileLayerAnimation()
         setNeedsLayout()
+    }
+
+    /// Current travel animation exposed only to internal regression tests.
+    var _travelAnimation: CABasicAnimation? {
+        motionContainerView.layer.animation(
+            forKey: _ITextMarqueeLayerAnimator.animationKey
+        ) as? CABasicAnimation
+    }
+
+    /// Whether the compositor currently owns a travel animation resource.
+    var _hasActiveTravelAnimation: Bool {
+        layerAnimator.hasActiveTravelAnimation
+    }
+
+    /// Motion-layer local time exposed only to internal regression tests.
+    var _motionLayerTimeOffset: CFTimeInterval {
+        motionContainerView.layer.timeOffset
+    }
+
+    /// Motion-layer timing speed exposed only to internal regression tests.
+    var _motionLayerSpeed: Float {
+        motionContainerView.layer.speed
+    }
+
+    /// Current compositor presentation translation exposed only to internal regression tests.
+    var _motionPresentationTranslationX: CGFloat? {
+        motionContainerView.layer.presentation()?.affineTransform().tx
     }
 }

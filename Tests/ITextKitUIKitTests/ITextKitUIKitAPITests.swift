@@ -57,8 +57,8 @@ final class ITextKitUIKitAPITests: XCTestCase {
         )
         engine.setEnvironmentActive(true)
         engine.advance(by: 0.2)
-        let offset = engine.snapshot.offset
         view.pause()
+        let offset = engine.snapshot.offset
 
         view.textStyle = .init(
             fill: .solid(.blue),
@@ -275,10 +275,10 @@ final class ITextKitUIKitAPITests: XCTestCase {
         XCTAssertEqual(view.playbackState, .paused)
         XCTAssertEqual(view.accessibilityLabel, view.text)
         XCTAssertTrue(view.isAccessibilityElement)
-        XCTAssertEqual(view.subviews.count, 2)
-        XCTAssertTrue(view.subviews.allSatisfy { !$0.isAccessibilityElement })
+        XCTAssertEqual(view._movingLabels.count, 2)
+        XCTAssertTrue(view._movingLabels.allSatisfy { !$0.isAccessibilityElement })
         XCTAssertGreaterThan(view.intrinsicContentSize.height, 0)
-        let labels = view.subviews.compactMap { $0 as? UILabel }
+        let labels = view._movingLabels
         XCTAssertEqual(labels.map(\.text), [view.text, view.text])
         XCTAssertTrue(labels.contains { label in
             !label.isHidden && label.frame.intersects(view.bounds)
@@ -320,7 +320,7 @@ final class ITextKitUIKitAPITests: XCTestCase {
         view.layoutIfNeeded()
 
         XCTAssertEqual(view.effectiveUserInterfaceLayoutDirection, .rightToLeft)
-        let labels = try XCTUnwrap(view.subviews as? [UILabel])
+        let labels = view._movingLabels
         XCTAssertEqual(labels.count, 2)
         XCTAssertLessThan(labels[1].frame.minX, labels[0].frame.minX)
     }
