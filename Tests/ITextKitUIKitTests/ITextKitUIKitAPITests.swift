@@ -30,13 +30,14 @@ final class ITextKitUIKitAPITests: XCTestCase {
         XCTAssertEqual(marquee.textStyle, style)
         XCTAssertEqual(typewriter.textStyle, style)
         XCTAssertTrue(rotator.subviews.allSatisfy { $0 is ITextStyledLabel })
-        XCTAssertTrue(marquee.subviews.allSatisfy { $0 is ITextStyledLabel })
+        XCTAssertEqual(marquee._movingLabels.count, 2)
         XCTAssertTrue(typewriter.subviews.allSatisfy { $0 is ITextStyledLabel })
-        XCTAssertTrue([rotator, marquee, typewriter].allSatisfy { view in
+        XCTAssertTrue([rotator, typewriter].allSatisfy { view in
             view.subviews
                 .compactMap { $0 as? ITextStyledLabel }
                 .allSatisfy { $0.textStyle == style }
         })
+        XCTAssertTrue(marquee._movingLabels.allSatisfy { $0.textStyle == style })
     }
 
     func testMarqueePaintOnlyStyleChangePreservesOffsetAndPause() throws {

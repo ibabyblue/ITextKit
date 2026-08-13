@@ -29,6 +29,9 @@ public final class ITextMarqueeView: UIView {
     public var configuration: ITextMarqueeConfiguration = .default {
         didSet {
             guard configuration != oldValue else { return }
+            if configuration.resolved.spacing != oldValue.resolved.spacing {
+                geometryIsDirty = true
+            }
             engine.updateConfiguration(configuration.resolved)
             applySnapshot(engine.snapshot)
             reconcileDisplayLink()
@@ -47,6 +50,7 @@ public final class ITextMarqueeView: UIView {
             }
             invalidateIntrinsicContentSize()
             if oldWidth != newWidth {
+                invalidateMeasurementAndGeometry()
                 engine.restart()
                 applySnapshot(engine.snapshot)
             }
@@ -86,6 +90,9 @@ public final class ITextMarqueeView: UIView {
     /// The repeated moving text copy.
     private let repeatedLabel = ITextStyledLabel()
 
+    /// Fixed viewport-sized container translated during steady travel.
+    private let motionContainerView = UIView()
+
     /// Shared deterministic motion engine.
     private let engine = _ITextMarqueeEngine(
         configuration: ITextMarqueeConfiguration.default.resolved,
@@ -110,8 +117,31 @@ public final class ITextMarqueeView: UIView {
     /// Last measured full text width.
     private var contentWidth: CGFloat = 0
 
+    /// Cached natural single-line text size.
+    private var cachedMeasuredTextSize = CGSize.zero
+
+    /// Whether content-dependent measurement must be rebuilt.
+    private var measurementIsDirty = true
+
+    /// Whether fixed container and copy frames must be rebuilt.
+    private var geometryIsDirty = true
+
+    /// Last viewport size used to prepare fixed geometry.
+    private var preparedBoundsSize = CGSize(width: -1, height: -1)
+
     /// Last physical layout direction used to place copies.
     private var lastLayoutDirection: UIUserInterfaceLayoutDirection?
+
+    /// Presentation mode used when the current copy frames were prepared.
+    private var preparedForMovingPresentation: Bool?
+
+    /// Number of full untruncated measurements performed by this view.
+    private(set) var _measurementGeneration: UInt64 = 0
+
+    /// The two private visual copies exposed only to internal regression tests.
+    var _movingLabels: [ITextStyledLabel] {
+        [primaryLabel, repeatedLabel]
+    }
 
     /// Creates an empty marquee view.
     ///
@@ -200,26 +230,30 @@ public final class ITextMarqueeView: UIView {
     /// Measures text, updates overflow state, and positions static or moving copies.
     public override func layoutSubviews() {
         super.layoutSubviews()
-        contentWidth = measuredTextSize.width
-        engine.updateMetrics(contentWidth: contentWidth, viewportWidth: bounds.width)
-        snapshot = engine.snapshot
-
         let direction = effectiveUserInterfaceLayoutDirection
         if direction != lastLayoutDirection {
             lastLayoutDirection = direction
+            geometryIsDirty = true
             engine.restart()
             snapshot = engine.snapshot
         }
 
-        let shouldMove = snapshot.isOverflowing
-            && configuration.resolved.speed > 0
-            && !UIAccessibility.isReduceMotionEnabled
-            && snapshot.playbackState != .stopped
+        if preparedBoundsSize != bounds.size {
+            preparedBoundsSize = bounds.size
+            geometryIsDirty = true
+        }
+
+        if geometryIsDirty {
+            prepareGeometry(direction: direction)
+        }
+        snapshot = engine.snapshot
+
+        let shouldMove = shouldMove(using: snapshot)
 
         if shouldMove {
-            layoutMovingLabels(direction: direction)
+            showMovingLabels(direction: direction)
         } else {
-            layoutStaticLabel()
+            showStaticLabel()
         }
         accessibilityLabel = storedAttributedText.string
         reconcileDisplayLink()
@@ -262,6 +296,7 @@ public final class ITextMarqueeView: UIView {
             return
         }
         invalidateIntrinsicContentSize()
+        invalidateMeasurementAndGeometry()
         engine.restart()
         setNeedsLayout()
     }
@@ -272,12 +307,16 @@ public final class ITextMarqueeView: UIView {
         backgroundColor = .clear
         isAccessibilityElement = true
 
+        motionContainerView.backgroundColor = .clear
+        motionContainerView.isUserInteractionEnabled = false
+        addSubview(motionContainerView)
+
         for label in [primaryLabel, repeatedLabel] {
             label.backgroundColor = .clear
             label.numberOfLines = 1
             label.isAccessibilityElement = false
             label.isUserInteractionEnabled = false
-            addSubview(label)
+            motionContainerView.addSubview(label)
         }
         synchronizeLabelStyle(restartMotion: false)
         synchronizeLabelContent()
@@ -314,7 +353,14 @@ public final class ITextMarqueeView: UIView {
     private func applySnapshot(_ snapshot: _ITextMarqueeSnapshot) {
         self.snapshot = snapshot
         playbackState = snapshot.playbackState
-        setNeedsLayout()
+        if preparedForMovingPresentation != shouldMove(using: snapshot) {
+            geometryIsDirty = true
+        }
+        if geometryIsDirty || preparedBoundsSize != bounds.size {
+            setNeedsLayout()
+        } else {
+            applyCurrentPresentation()
+        }
     }
 
     /// Replaces content with an immutable snapshot and restarts geometry-dependent motion.
@@ -323,6 +369,7 @@ public final class ITextMarqueeView: UIView {
         guard !snapshot.isEqual(to: storedAttributedText) else { return }
         storedAttributedText = snapshot
         synchronizeLabelContent()
+        invalidateMeasurementAndGeometry()
         engine.restart()
         applySnapshot(engine.snapshot)
         setNeedsLayout()
@@ -351,6 +398,7 @@ public final class ITextMarqueeView: UIView {
         // caller snapshot afterward so inline attributes continue to win over those defaults.
         synchronizeLabelContent()
         if restartMotion {
+            invalidateMeasurementAndGeometry()
             engine.restart()
         }
         setNeedsLayout()
@@ -364,17 +412,28 @@ public final class ITextMarqueeView: UIView {
 
     /// Measures the complete untruncated line independently from the labels' current frames.
     private var measuredTextSize: CGSize {
-        guard storedAttributedText.length > 0 else { return .zero }
+        guard measurementIsDirty else { return cachedMeasuredTextSize }
+        measurementIsDirty = false
+        guard storedAttributedText.length > 0 else {
+            cachedMeasuredTextSize = .zero
+            return .zero
+        }
+        _measurementGeneration &+= 1
         let size = primaryLabel.sizeThatFits(CGSize(
             width: CGFloat.greatestFiniteMagnitude,
             height: CGFloat.greatestFiniteMagnitude
         ))
-        return CGSize(width: ceil(size.width), height: ceil(size.height))
+        cachedMeasuredTextSize = CGSize(
+            width: ceil(size.width),
+            height: ceil(size.height)
+        )
+        return cachedMeasuredTextSize
     }
 
     /// Renders one static, tail-truncated accessibility representation.
-    private func layoutStaticLabel() {
-        primaryLabel.frame = bounds
+    private func showStaticLabel() {
+        motionContainerView.transform = .identity
+        primaryLabel.frame = motionContainerView.bounds
         primaryLabel.lineBreakMode = .byTruncatingTail
         primaryLabel.isHidden = false
         repeatedLabel.isHidden = true
@@ -383,37 +442,85 @@ public final class ITextMarqueeView: UIView {
     /// Positions repeated full-width labels for the current semantic travel offset.
     ///
     /// - Parameter direction: Current physical interface direction.
-    private func layoutMovingLabels(direction: UIUserInterfaceLayoutDirection) {
+    private func showMovingLabels(direction: UIUserInterfaceLayoutDirection) {
         primaryLabel.lineBreakMode = .byClipping
         repeatedLabel.lineBreakMode = .byClipping
         primaryLabel.isHidden = false
         repeatedLabel.isHidden = false
 
-        let distance = contentWidth + configuration.resolved.spacing
-        let offset = snapshot.offset
-        let startX = direction == .rightToLeft ? bounds.width - contentWidth : 0
-        let primaryX: CGFloat
-        let repeatedX: CGFloat
-        if direction == .rightToLeft {
-            primaryX = startX + offset
-            repeatedX = startX - distance + offset
-        } else {
-            primaryX = startX - offset
-            repeatedX = startX + distance - offset
-        }
+        applyMotionTransform(direction: direction)
+    }
 
-        primaryLabel.frame = CGRect(
-            x: primaryX,
-            y: 0,
-            width: contentWidth,
-            height: bounds.height
+    /// Rebuilds measurement and fixed copy frames after a real geometry change.
+    private func prepareGeometry(direction: UIUserInterfaceLayoutDirection) {
+        motionContainerView.transform = .identity
+        motionContainerView.frame = bounds
+        contentWidth = measuredTextSize.width
+        engine.updateMetrics(contentWidth: contentWidth, viewportWidth: bounds.width)
+        snapshot = engine.snapshot
+        geometryIsDirty = false
+
+        let shouldMove = shouldMove(using: snapshot)
+        preparedForMovingPresentation = shouldMove
+        if shouldMove {
+            let distance = contentWidth + configuration.resolved.spacing
+            let startX = direction == .rightToLeft
+                ? bounds.width - contentWidth
+                : 0
+            let repeatedX = direction == .rightToLeft
+                ? startX - distance
+                : startX + distance
+            primaryLabel.frame = CGRect(
+                x: startX,
+                y: 0,
+                width: contentWidth,
+                height: bounds.height
+            )
+            repeatedLabel.frame = CGRect(
+                x: repeatedX,
+                y: 0,
+                width: contentWidth,
+                height: bounds.height
+            )
+        } else {
+            primaryLabel.frame = bounds
+        }
+    }
+
+    /// Applies the current state without measuring or changing copy frames.
+    private func applyCurrentPresentation() {
+        let direction = effectiveUserInterfaceLayoutDirection
+        let shouldMove = shouldMove(using: snapshot)
+        if shouldMove {
+            showMovingLabels(direction: direction)
+        } else {
+            showStaticLabel()
+        }
+    }
+
+    /// Translates the fixed container while leaving prepared text contents untouched.
+    private func applyMotionTransform(direction: UIUserInterfaceLayoutDirection) {
+        let translation = direction == .rightToLeft
+            ? snapshot.offset
+            : -snapshot.offset
+        motionContainerView.transform = CGAffineTransform(
+            translationX: translation,
+            y: 0
         )
-        repeatedLabel.frame = CGRect(
-            x: repeatedX,
-            y: 0,
-            width: contentWidth,
-            height: bounds.height
-        )
+    }
+
+    /// Resolves whether the current inputs require the repeated moving presentation.
+    private func shouldMove(using snapshot: _ITextMarqueeSnapshot) -> Bool {
+        snapshot.isOverflowing
+            && configuration.resolved.speed > 0
+            && !UIAccessibility.isReduceMotionEnabled
+            && snapshot.playbackState != .stopped
+    }
+
+    /// Marks cached measurement and fixed frames stale.
+    private func invalidateMeasurementAndGeometry() {
+        measurementIsDirty = true
+        geometryIsDirty = true
     }
 
     /// Applies current window-scene visibility to the timing engine.
