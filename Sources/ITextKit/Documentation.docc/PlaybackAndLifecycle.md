@@ -17,11 +17,11 @@ For a rotator, stopped presentation is the last fully settled item. For a marque
 
 ## Exact Suspension
 
-The package advances deterministic state from display-link deltas instead of handing timing ownership to an opaque repeating animation. A pause therefore retains the remaining settled interval, transition offset, opacity, intermediate rotator height, marquee initial delay, and marquee offset.
+The package synchronizes deterministic state from a monotonic clock at each discrete playback or lifecycle transition. Renderers then freeze their current presentation or replace an obsolete repeating presentation with that synchronized state. A pause therefore retains the remaining settled interval, transition offset, opacity, intermediate rotator height, marquee initial delay, and marquee offset without publishing per-frame Swift state.
 
 ## Environment Suspension
 
-When a UIKit view leaves its window, a SwiftUI view disappears, or the application scene becomes inactive, ITextKit stops its display link but does not modify explicit playback state. If the same view returns while state remains playing, it continues from its saved position.
+When a UIKit view leaves its window, a SwiftUI view disappears, or the application scene becomes inactive, ITextKit freezes renderer travel but does not modify explicit playback state. If the same view returns while state remains playing, it continues from its saved position.
 
 ## Automatic Typewriter Lifecycle
 

@@ -156,6 +156,7 @@ public struct ITextMarquee: View {
                         movingText
                         movingText
                     }
+                    .id(model.rendererGeneration)
                     .fixedSize(horizontal: true, vertical: false)
                     .offset(x: resolvedTargetOffset)
                     .animation(
@@ -309,6 +310,7 @@ struct _ITextSwiftUIMarqueeTransition: Equatable {
 private struct _ITextSwiftUIMarqueePresentation {
     let snapshot: _ITextMarqueeSnapshot
     let transition: _ITextSwiftUIMarqueeTransition
+    let rendererGeneration: UInt64
 }
 
 /// Observable adapter between the shared marquee engine and SwiftUI.
@@ -325,6 +327,11 @@ final class _ITextMarqueeObservable: ObservableObject {
     /// Latest discrete animation instruction exposed to the view.
     var transition: _ITextSwiftUIMarqueeTransition {
         presentation.transition
+    }
+
+    /// Identity of the moving-copy renderer used to cancel obsolete infinite animations.
+    var rendererGeneration: UInt64 {
+        presentation.rendererGeneration
     }
 
     /// Number of discrete renderer publications, exposed to regression tests.
@@ -344,6 +351,9 @@ final class _ITextMarqueeObservable: ObservableObject {
 
     /// Monotonic transition identity consumed by SwiftUI's animation modifier.
     private var transitionGeneration: UInt64 = 0
+
+    /// Monotonic moving-copy identity used for exact static replacement.
+    private var movingRendererGeneration: UInt64 = 0
 
     /// Last attributed value used to determine whether motion should restart.
     private var attributedText: AttributedString
@@ -391,7 +401,8 @@ final class _ITextMarqueeObservable: ObservableObject {
                 delay: 0,
                 repeats: false,
                 generation: 0
-            )
+            ),
+            rendererGeneration: 0
         )
 
         engine.onSnapshotChanged = { [weak self] snapshot in
@@ -475,6 +486,7 @@ final class _ITextMarqueeObservable: ObservableObject {
     private func reconcile(snapshot: _ITextMarqueeSnapshot) {
         cancelSeamTask()
         guard let plan = engine.motionPlan else {
+            resetMovingRenderer()
             publish(
                 snapshot: snapshot,
                 targetOffset: snapshot.offset,
@@ -487,6 +499,7 @@ final class _ITextMarqueeObservable: ObservableObject {
 
         let seamTolerance: CGFloat = 0.5
         if plan.offset <= seamTolerance {
+            resetMovingRenderer()
             publish(
                 snapshot: snapshot,
                 targetOffset: 0,
@@ -505,6 +518,11 @@ final class _ITextMarqueeObservable: ObservableObject {
             )
             scheduleRepeatingCycle(after: plan.delay + plan.remainingCycleDuration, plan: plan)
         }
+    }
+
+    /// Replaces the moving subtree so an obsolete repeat-forever animation cannot survive.
+    private func resetMovingRenderer() {
+        movingRendererGeneration &+= 1
     }
 
     /// Lets SwiftUI insert the moving copies at leading before animating their offset.
@@ -592,7 +610,8 @@ final class _ITextMarqueeObservable: ObservableObject {
                 delay: delay,
                 repeats: repeats,
                 generation: transitionGeneration
-            )
+            ),
+            rendererGeneration: movingRendererGeneration
         )
     }
 }

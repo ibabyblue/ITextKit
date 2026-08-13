@@ -1,6 +1,56 @@
+import UIKit
 import XCTest
 
 final class MarqueeCatalogUITests: ITextKitExampleUITestCase {
+    func testSwiftUINativeMarqueePlaybackControlsVisibleTravel() throws {
+        let app = open("Marquee")
+        let windowFrame = app.windows.firstMatch.frame
+        let marquee = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label == %@", Self.overflowText)
+        ).firstMatch
+        scrollToVisible(marquee, in: app, windowFrame: windowFrame, upward: false)
+
+        Thread.sleep(forTimeInterval: 1.2)
+        let runningStart = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        Thread.sleep(forTimeInterval: 0.3)
+        let runningEnd = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        XCTAssertNotEqual(runningStart, runningEnd, "Test precondition: marquee must move")
+
+        tapPlaybackButton("Pause", in: app)
+
+        scrollToVisible(marquee, in: app, windowFrame: windowFrame, upward: true)
+        Thread.sleep(forTimeInterval: 0.2)
+        let pausedStart = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        Thread.sleep(forTimeInterval: 0.3)
+        let pausedEnd = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+
+        XCTAssertEqual(pausedStart, pausedEnd)
+
+        tapPlaybackButton("Resume", in: app)
+        scrollToVisible(marquee, in: app, windowFrame: windowFrame, upward: true)
+        Thread.sleep(forTimeInterval: 0.2)
+        let resumedStart = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        Thread.sleep(forTimeInterval: 0.3)
+        let resumedEnd = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        XCTAssertNotEqual(resumedStart, resumedEnd)
+
+        tapPlaybackButton("Stop", in: app)
+        scrollToVisible(marquee, in: app, windowFrame: windowFrame, upward: true)
+        Thread.sleep(forTimeInterval: 0.2)
+        let stoppedStart = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        Thread.sleep(forTimeInterval: 0.3)
+        let stoppedEnd = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        XCTAssertEqual(stoppedStart, stoppedEnd)
+
+        tapPlaybackButton("Start", in: app)
+        scrollToVisible(marquee, in: app, windowFrame: windowFrame, upward: true)
+        Thread.sleep(forTimeInterval: 1.2)
+        let restartedStart = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        Thread.sleep(forTimeInterval: 0.3)
+        let restartedEnd = try croppedScreenshot(of: marquee, windowFrame: windowFrame)
+        XCTAssertNotEqual(restartedStart, restartedEnd)
+    }
+
     func testSwiftUIMarqueeTeachesStaticOverflowRichStyledAndRTL() {
         let app = open("Marquee")
         assertSections(in: app)
@@ -70,4 +120,48 @@ final class MarqueeCatalogUITests: ITextKitExampleUITestCase {
             XCTAssertTrue(app.staticTexts[$0].exists)
         }
     }
+
+    private func scrollToVisible(
+        _ element: XCUIElement,
+        in app: XCUIApplication,
+        windowFrame: CGRect,
+        upward: Bool
+    ) {
+        for _ in 0..<20 {
+            let visibleFrame = element.frame.intersection(windowFrame.insetBy(dx: 0, dy: 60))
+            if element.exists, visibleFrame.height >= min(element.frame.height, 20) {
+                return
+            }
+            upward ? app.swipeDown() : app.swipeUp()
+        }
+        XCTFail("Could not make \(element) visible")
+    }
+
+    private func tapPlaybackButton(_ title: String, in app: XCUIApplication) {
+        let button = app.buttons[title]
+        for _ in 0..<20 where !button.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(button.isHittable)
+        button.tap()
+    }
+
+    private func croppedScreenshot(
+        of element: XCUIElement,
+        windowFrame: CGRect
+    ) throws -> Data {
+        let screenshot = XCUIScreen.main.screenshot()
+        let image = try XCTUnwrap(UIImage(data: screenshot.pngRepresentation))
+        let cgImage = try XCTUnwrap(image.cgImage)
+        let scale = CGFloat(cgImage.width) / windowFrame.width
+        let cropRect = element.frame
+            .applying(CGAffineTransform(scaleX: scale, y: scale))
+            .integral
+            .intersection(CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
+        let crop = try XCTUnwrap(cgImage.cropping(to: cropRect))
+        return try XCTUnwrap(UIImage(cgImage: crop).pngData())
+    }
+
+    private static let overflowText =
+        "This long announcement waits, then loops seamlessly when it exceeds the available width."
 }

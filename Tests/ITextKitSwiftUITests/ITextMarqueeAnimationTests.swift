@@ -62,6 +62,7 @@ final class ITextMarqueeAnimationTests: XCTestCase {
         XCTAssertTrue(model.transition.repeats)
         XCTAssertNil(Mirror(reflecting: model).descendant("displayLink"))
         let runningPublication = model._publicationGeneration
+        let runningRenderer = model.rendererGeneration
 
         clock.time += 0.25
         XCTAssertEqual(model._publicationGeneration, runningPublication)
@@ -71,12 +72,15 @@ final class ITextMarqueeAnimationTests: XCTestCase {
         XCTAssertEqual(model.transition.duration, 0)
         XCTAssertFalse(model.transition.repeats)
         XCTAssertEqual(model._publicationGeneration, runningPublication + 1)
+        XCTAssertGreaterThan(model.rendererGeneration, runningRenderer)
+        let pausedRenderer = model.rendererGeneration
 
         model.setPlaybackState(.playing)
         XCTAssertEqual(model.transition.targetOffset, 220)
         XCTAssertEqual(model.transition.duration, 5.25, accuracy: 0.000_001)
         XCTAssertFalse(model.transition.repeats)
         XCTAssertEqual(model._publicationGeneration, runningPublication + 2)
+        XCTAssertEqual(model.rendererGeneration, pausedRenderer)
     }
 
     func testSceneFreezePublishesStaticPhaseWithoutChangingCallerState() {
