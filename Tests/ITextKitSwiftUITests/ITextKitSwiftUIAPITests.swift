@@ -127,8 +127,50 @@ final class ITextKitSwiftUIAPITests: XCTestCase {
         XCTAssertTrue(engine.snapshot.isOverflowing)
         marquee.resume()
         engine.setEnvironmentActive(true)
-        engine.advance(by: 0.1)
-        XCTAssertGreaterThan(engine.snapshot.offset, 0)
+        marquee.layoutIfNeeded()
+        XCTAssertTrue(marquee._hasActiveTravelAnimation)
+    }
+
+    func testStyledMarqueeEqualSwiftUIUpdateKeepsRenderedCopiesStable() throws {
+        let value = ITextMarquee(
+            text: "A long gradient outlined marquee for stable representable updates",
+            font: .systemFont(ofSize: 20, weight: .bold),
+            textStyle: .init(
+                fill: .linearGradient(.init(colors: [.pink, .orange])),
+                stroke: .init(
+                    paint: .linearGradient(.init(colors: [.white, .blue])),
+                    width: 1
+                )
+            ),
+            configuration: .init(speed: 40, spacing: 24, initialDelay: 0),
+            playbackState: .playing
+        )
+        .frame(width: 180)
+        let host = UIHostingController(rootView: value)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 100))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        host.view.frame = window.bounds
+        host.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+
+        let marquee = try XCTUnwrap(findSubview(of: ITextMarqueeView.self, in: host.view))
+        marquee._movingLabels.forEach { $0.layer.displayIfNeeded() }
+        let measurement = marquee._measurementGeneration
+        let layout = marquee._movingLabels.map(\._layoutGeneration)
+        let drawing = marquee._movingLabels.map(\._drawingGeneration)
+
+        host.rootView = value
+        host.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        let updated = try XCTUnwrap(findSubview(of: ITextMarqueeView.self, in: host.view))
+        updated._movingLabels.forEach { $0.layer.displayIfNeeded() }
+
+        XCTAssertTrue(updated === marquee)
+        XCTAssertEqual(updated._measurementGeneration, measurement)
+        XCTAssertEqual(updated._movingLabels.map(\._layoutGeneration), layout)
+        XCTAssertEqual(updated._movingLabels.map(\._drawingGeneration), drawing)
+        XCTAssertTrue(updated._hasActiveTravelAnimation)
     }
 
     func testTypewriterAdapterPreservesRichCharacterBoundariesAndLifecycleProgress() throws {

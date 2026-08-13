@@ -54,11 +54,23 @@ struct _ITextStyledMarqueeRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ view: ITextMarqueeView, context: Context) {
-        view.attributedText = content.values[0]
-        view.configuration = configuration
-        view.font = content.defaultFont
-        view.adjustsFontForContentSizeCategory = content.adjustsFont
-        view.textStyle = ITextStyledText._resolvedUIKitStyle(content.style)
+        let attributedText = content.values[0]
+        if !view.attributedText.isEqual(to: attributedText) {
+            view.attributedText = attributedText
+        }
+        if view.configuration != configuration {
+            view.configuration = configuration
+        }
+        if view.font != content.defaultFont {
+            view.font = content.defaultFont
+        }
+        if view.adjustsFontForContentSizeCategory != content.adjustsFont {
+            view.adjustsFontForContentSizeCategory = content.adjustsFont
+        }
+        let style = ITextStyledText._resolvedUIKitStyle(content.style)
+        if view.textStyle != style {
+            view.textStyle = style
+        }
         synchronize(playbackState, with: view)
     }
 

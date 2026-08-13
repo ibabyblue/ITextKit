@@ -1,4 +1,5 @@
 import Combine
+import QuartzCore
 import SwiftUI
 
 /// A SwiftUI view that moves one overflowing line of plain or attributed text in a seamless loop.
@@ -18,7 +19,7 @@ public struct ITextMarquee: View {
     private let playbackState: ITextPlaybackState
     private let styledContent: _ITextStyledEffectConfiguration?
 
-    /// Long-lived timing and display-link ownership.
+    /// Long-lived timing and discrete animation ownership.
     @StateObject private var model: _ITextMarqueeObservable
 
     /// Current system motion preference.
@@ -156,7 +157,11 @@ public struct ITextMarquee: View {
                         movingText
                     }
                     .fixedSize(horizontal: true, vertical: false)
-                    .offset(x: resolvedOffset)
+                    .offset(x: resolvedTargetOffset)
+                    .animation(
+                        model.transition.animation,
+                        value: model.transition.generation
+                    )
                     .accessibilityHidden(true)
                 }
             }
@@ -230,8 +235,10 @@ public struct ITextMarquee: View {
     }
 
     /// Signed physical offset resolved from semantic layout direction.
-    private var resolvedOffset: CGFloat {
-        layoutDirection == .rightToLeft ? model.snapshot.offset : -model.snapshot.offset
+    private var resolvedTargetOffset: CGFloat {
+        layoutDirection == .rightToLeft
+            ? model.transition.targetOffset
+            : -model.transition.targetOffset
     }
 
     /// Plain characters exposed as the single accessibility element.
@@ -270,17 +277,73 @@ private struct _ITextMarqueeViewportWidthPreferenceKey: PreferenceKey {
     }
 }
 
+/// One discrete SwiftUI animation instruction for compositor-driven marquee travel.
+struct _ITextSwiftUIMarqueeTransition: Equatable {
+    /// Semantic travel target in points.
+    let targetOffset: CGFloat
+
+    /// Linear travel duration in seconds. Zero means an immediate static placement.
+    let duration: TimeInterval
+
+    /// Delay before this travel begins.
+    let delay: TimeInterval
+
+    /// Whether SwiftUI repeats the full seamless cycle forever.
+    let repeats: Bool
+
+    /// Stable value used to trigger exactly one SwiftUI animation update.
+    let generation: UInt64
+
+    /// Animation resolved from the discrete instruction.
+    var animation: Animation? {
+        guard duration > 0 else { return nil }
+        let linear = Animation.linear(duration: duration)
+        if repeats {
+            return linear.repeatForever(autoreverses: false).delay(delay)
+        }
+        return linear.delay(delay)
+    }
+}
+
+/// Snapshot and transition published atomically for one SwiftUI renderer update.
+private struct _ITextSwiftUIMarqueePresentation {
+    let snapshot: _ITextMarqueeSnapshot
+    let transition: _ITextSwiftUIMarqueeTransition
+}
+
 /// Observable adapter between the shared marquee engine and SwiftUI.
 @MainActor
-private final class _ITextMarqueeObservable: ObservableObject {
-    /// Latest state published to the view.
-    @Published private(set) var snapshot: _ITextMarqueeSnapshot
+final class _ITextMarqueeObservable: ObservableObject {
+    /// Atomically published renderer state.
+    @Published private var presentation: _ITextSwiftUIMarqueePresentation
+
+    /// Latest state exposed to the view.
+    var snapshot: _ITextMarqueeSnapshot {
+        presentation.snapshot
+    }
+
+    /// Latest discrete animation instruction exposed to the view.
+    var transition: _ITextSwiftUIMarqueeTransition {
+        presentation.transition
+    }
+
+    /// Number of discrete renderer publications, exposed to regression tests.
+    private(set) var _publicationGeneration: UInt64 = 0
 
     /// Framework-independent marquee timing engine.
     private let engine: _ITextMarqueeEngine
 
-    /// Display-link clock stopped whenever time cannot advance.
-    private let displayLink = _ITextDisplayLinkDriver()
+    /// Cancellable delay primitive used only for a reconstructed partial-cycle seam.
+    private let sleeper: (TimeInterval) async throws -> Void
+
+    /// Current one-shot seam task, if travel resumed from a partial cycle.
+    private var seamTask: Task<Void, Never>?
+
+    /// Invalidates obsolete seam completions after every discrete state change.
+    private var seamGeneration: UInt64 = 0
+
+    /// Monotonic transition identity consumed by SwiftUI's animation modifier.
+    private var transitionGeneration: UInt64 = 0
 
     /// Last attributed value used to determine whether motion should restart.
     private var attributedText: AttributedString
@@ -301,23 +364,43 @@ private final class _ITextMarqueeObservable: ObservableObject {
     init(
         attributedText: AttributedString,
         configuration: ITextMarqueeConfiguration,
-        playbackState: ITextPlaybackState
+        playbackState: ITextPlaybackState,
+        now: @escaping () -> CFTimeInterval = CACurrentMediaTime,
+        sleeper: @escaping (TimeInterval) async throws -> Void = { duration in
+            if duration > 0 {
+                let nanoseconds = UInt64(duration * 1_000_000_000)
+                try await Task.sleep(nanoseconds: nanoseconds)
+            } else {
+                await Task.yield()
+            }
+        }
     ) {
         let engine = _ITextMarqueeEngine(
             configuration: configuration.resolved,
-            playbackState: playbackState
+            playbackState: playbackState,
+            now: now
         )
         self.engine = engine
+        self.sleeper = sleeper
         self.attributedText = attributedText
-        self.snapshot = engine.snapshot
+        self.presentation = _ITextSwiftUIMarqueePresentation(
+            snapshot: engine.snapshot,
+            transition: _ITextSwiftUIMarqueeTransition(
+                targetOffset: 0,
+                duration: 0,
+                delay: 0,
+                repeats: false,
+                generation: 0
+            )
+        )
 
         engine.onSnapshotChanged = { [weak self] snapshot in
-            self?.snapshot = snapshot
-            self?.reconcileDisplayLink()
+            self?.reconcile(snapshot: snapshot)
         }
-        displayLink.onFrame = { [weak self] elapsed in
-            self?.engine.advance(by: elapsed)
-        }
+    }
+
+    deinit {
+        seamTask?.cancel()
     }
 
     /// Restarts for any displayed content or attribute change.
@@ -325,39 +408,33 @@ private final class _ITextMarqueeObservable: ObservableObject {
         guard attributedText != self.attributedText else { return }
         self.attributedText = attributedText
         engine.restart()
-        snapshot = engine.snapshot
-        reconcileDisplayLink()
     }
 
     /// Replaces normalized marquee motion values.
     func updateConfiguration(_ configuration: ITextMarqueeConfiguration) {
         engine.updateConfiguration(configuration.resolved)
-        snapshot = engine.snapshot
-        reconcileDisplayLink()
     }
 
     /// Applies caller-requested playback state.
     func setPlaybackState(_ playbackState: ITextPlaybackState) {
         engine.setPlaybackState(playbackState)
-        snapshot = engine.snapshot
-        reconcileDisplayLink()
     }
 
     /// Applies the current Reduce Motion permission.
     func setMotionAllowed(_ isAllowed: Bool) {
         engine.setMotionAllowed(isAllowed)
-        snapshot = engine.snapshot
-        reconcileDisplayLink()
     }
 
     /// Updates full text width and recalculates overflow.
     func updateContentWidth(_ width: CGFloat) {
+        guard width != contentWidth else { return }
         contentWidth = width
         updateMetrics()
     }
 
     /// Updates clipping viewport width and recalculates overflow.
     func updateViewportWidth(_ width: CGFloat) {
+        guard width != viewportWidth else { return }
         viewportWidth = width
         updateMetrics()
     }
@@ -365,12 +442,13 @@ private final class _ITextMarqueeObservable: ObservableObject {
     /// Restarts semantic motion when leading/trailing direction changes.
     func restartForLayoutDirectionChange() {
         engine.restart()
-        snapshot = engine.snapshot
-        reconcileDisplayLink()
     }
 
     /// Applies complete visibility state when the view appears or disappears.
     func setVisible(_ isVisible: Bool, sceneIsActive: Bool) {
+        guard isVisible != self.isVisible || sceneIsActive != self.sceneIsActive else {
+            return
+        }
         self.isVisible = isVisible
         self.sceneIsActive = sceneIsActive
         applyEnvironmentState()
@@ -378,6 +456,7 @@ private final class _ITextMarqueeObservable: ObservableObject {
 
     /// Applies scene activity while retaining hierarchy visibility.
     func setSceneActive(_ isActive: Bool) {
+        guard isActive != sceneIsActive else { return }
         sceneIsActive = isActive
         applyEnvironmentState()
     }
@@ -385,22 +464,112 @@ private final class _ITextMarqueeObservable: ObservableObject {
     /// Projects measured widths into the shared engine.
     private func updateMetrics() {
         engine.updateMetrics(contentWidth: contentWidth, viewportWidth: viewportWidth)
-        snapshot = engine.snapshot
-        reconcileDisplayLink()
     }
 
     /// Projects SwiftUI visibility into the shared engine.
     private func applyEnvironmentState() {
         engine.setEnvironmentActive(isVisible && sceneIsActive)
-        reconcileDisplayLink()
     }
 
-    /// Runs the display link only while elapsed time can change state.
-    private func reconcileDisplayLink() {
-        if engine.shouldAdvance {
-            displayLink.start()
-        } else {
-            displayLink.stop()
+    /// Publishes one static, repeating, or remaining-cycle renderer instruction.
+    private func reconcile(snapshot: _ITextMarqueeSnapshot) {
+        cancelSeamTask()
+        guard let plan = engine.motionPlan else {
+            publish(
+                snapshot: snapshot,
+                targetOffset: snapshot.offset,
+                duration: 0,
+                delay: 0,
+                repeats: false
+            )
+            return
         }
+
+        let seamTolerance: CGFloat = 0.5
+        if plan.offset <= seamTolerance {
+            publish(
+                snapshot: snapshot,
+                targetOffset: plan.cycleDistance,
+                duration: TimeInterval(plan.cycleDistance / plan.speed),
+                delay: plan.delay,
+                repeats: true
+            )
+        } else {
+            publish(
+                snapshot: snapshot,
+                targetOffset: plan.cycleDistance,
+                duration: plan.remainingCycleDuration,
+                delay: plan.delay,
+                repeats: false
+            )
+            scheduleRepeatingCycle(after: plan.delay + plan.remainingCycleDuration, plan: plan)
+        }
+    }
+
+    /// Cancels and invalidates any completion belonging to an older partial cycle.
+    private func cancelSeamTask() {
+        seamGeneration &+= 1
+        seamTask?.cancel()
+        seamTask = nil
+    }
+
+    /// Schedules the only non-frame-rate callback needed by native SwiftUI travel.
+    private func scheduleRepeatingCycle(
+        after duration: TimeInterval,
+        plan: _ITextMarqueeMotionPlan
+    ) {
+        let generation = seamGeneration
+        let sleeper = self.sleeper
+        seamTask = Task { @MainActor [weak self] in
+            do {
+                try await sleeper(duration)
+            } catch {
+                return
+            }
+            guard let self, generation == seamGeneration else { return }
+            publish(
+                snapshot: engine.snapshot,
+                targetOffset: 0,
+                duration: 0,
+                delay: 0,
+                repeats: false
+            )
+            do {
+                try await sleeper(0)
+            } catch {
+                return
+            }
+            guard generation == seamGeneration else { return }
+            publish(
+                snapshot: engine.snapshot,
+                targetOffset: plan.cycleDistance,
+                duration: TimeInterval(plan.cycleDistance / plan.speed),
+                delay: 0,
+                repeats: true
+            )
+            seamTask = nil
+        }
+    }
+
+    /// Emits one transition identity while avoiding any frame-rate publication.
+    private func publish(
+        snapshot: _ITextMarqueeSnapshot,
+        targetOffset: CGFloat,
+        duration: TimeInterval,
+        delay: TimeInterval,
+        repeats: Bool
+    ) {
+        transitionGeneration &+= 1
+        _publicationGeneration &+= 1
+        presentation = _ITextSwiftUIMarqueePresentation(
+            snapshot: snapshot,
+            transition: _ITextSwiftUIMarqueeTransition(
+                targetOffset: targetOffset,
+                duration: duration,
+                delay: delay,
+                repeats: repeats,
+                generation: transitionGeneration
+            )
+        )
     }
 }
