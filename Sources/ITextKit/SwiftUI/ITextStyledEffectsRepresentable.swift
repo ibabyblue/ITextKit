@@ -41,11 +41,16 @@ struct _ITextStyledMarqueeRepresentable: UIViewRepresentable {
     let playbackState: ITextPlaybackState
 
     func makeUIView(context: Context) -> ITextMarqueeView {
-        ITextMarqueeView(
+        let view = ITextMarqueeView(
             attributedText: content.values[0],
             configuration: configuration,
             playbackState: playbackState
         )
+        view.setContentCompressionResistancePriority(
+            .defaultLow,
+            for: .horizontal
+        )
+        return view
     }
 
     func updateUIView(_ view: ITextMarqueeView, context: Context) {
@@ -55,6 +60,17 @@ struct _ITextStyledMarqueeRepresentable: UIViewRepresentable {
         view.adjustsFontForContentSizeCategory = content.adjustsFont
         view.textStyle = ITextStyledText._resolvedUIKitStyle(content.style)
         synchronize(playbackState, with: view)
+    }
+
+    @available(iOS 16.0, *)
+    func sizeThatFits(
+        _ proposal: ProposedViewSize,
+        uiView: ITextMarqueeView,
+        context: Context
+    ) -> CGSize? {
+        let width = proposal.width ?? CGFloat.greatestFiniteMagnitude
+        let height = proposal.height ?? CGFloat.greatestFiniteMagnitude
+        return uiView.sizeThatFits(CGSize(width: width, height: height))
     }
 }
 

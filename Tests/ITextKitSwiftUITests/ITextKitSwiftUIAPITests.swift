@@ -95,6 +95,42 @@ final class ITextKitSwiftUIAPITests: XCTestCase {
         _ = richTypewriter
     }
 
+    func testStyledMarqueeUsesProposedViewportAndOverflows() throws {
+        let value = ITextMarquee(
+            text: "A long outlined marquee must move inside this narrow SwiftUI viewport",
+            font: .systemFont(ofSize: 20, weight: .bold),
+            textStyle: .init(
+                fill: .linearGradient(.init(colors: [.pink, .orange])),
+                stroke: .init(paint: .solid(.blue), width: 1)
+            ),
+            configuration: .init(speed: 40, spacing: 24, initialDelay: 0),
+            playbackState: .paused
+        )
+        .frame(width: 180)
+
+        let host = UIHostingController(rootView: value)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 100))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        host.view.frame = window.bounds
+        host.view.setNeedsLayout()
+        host.view.layoutIfNeeded()
+
+        let marquee = try XCTUnwrap(
+            findSubview(of: ITextMarqueeView.self, in: host.view)
+        )
+        XCTAssertEqual(marquee.bounds.width, 180, accuracy: 0.5)
+
+        let engine = try XCTUnwrap(
+            Mirror(reflecting: marquee).descendant("engine") as? _ITextMarqueeEngine
+        )
+        XCTAssertTrue(engine.snapshot.isOverflowing)
+        marquee.resume()
+        engine.setEnvironmentActive(true)
+        engine.advance(by: 0.1)
+        XCTAssertGreaterThan(engine.snapshot.offset, 0)
+    }
+
     func testTypewriterAdapterPreservesRichCharacterBoundariesAndLifecycleProgress() throws {
         let family = "👨‍👩‍👧‍👦"
         var richText = AttributedString(family + "A")
@@ -129,6 +165,19 @@ final class ITextKitSwiftUIAPITests: XCTestCase {
         XCTAssertEqual(model.visibleAttributedText, richText)
 
         model.setVisible(false, sceneIsActive: false)
+    }
+
+    private func findSubview<T: UIView>(
+        of type: T.Type,
+        in root: UIView
+    ) -> T? {
+        if let match = root as? T { return match }
+        for child in root.subviews {
+            if let match = findSubview(of: type, in: child) {
+                return match
+            }
+        }
+        return nil
     }
 
     func testTypewriterAdapterIgnoresEqualContentAndCompletesForReduceMotion() throws {
