@@ -4,7 +4,13 @@ import SwiftUI
 struct ITextKitExampleApp: App {
     var body: some Scene {
         WindowGroup {
-            ExampleRootView()
+            if ProcessInfo.processInfo.arguments.contains(
+                "-ITextStyledPerformance"
+            ) {
+                StyledTextPerformanceView()
+            } else {
+                ExampleRootView()
+            }
         }
     }
 }

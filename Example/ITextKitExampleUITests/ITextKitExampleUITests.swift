@@ -2,6 +2,23 @@ import UIKit
 import XCTest
 
 final class ITextKitExampleUITests: XCTestCase {
+    func testStyledPerformanceLaunchArgumentShowsTwentyRowFixture() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ITextStyledPerformance"]
+        app.launch()
+
+        XCTAssertTrue(
+            app.otherElements["Styled performance fixture"]
+                .waitForExistence(timeout: 2)
+        )
+        XCTAssertEqual(
+            app.staticTexts.matching(
+                NSPredicate(format: "label BEGINSWITH 'Styled row '")
+            ).count,
+            20
+        )
+    }
+
     func testSwiftUIShimmerDoesNotAnimateCardBackground() {
         let app = XCUIApplication()
         app.launch()

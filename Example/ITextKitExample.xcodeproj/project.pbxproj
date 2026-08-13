@@ -9,14 +9,24 @@
 /* Begin PBXBuildFile section */
 		0B222D61620F3DAD00760C07 /* SwiftUIExampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35BFC68CF671DAAB000A2809 /* SwiftUIExampleView.swift */; };
 		1EC17D1D1E079ADE66CCACD8 /* ITextKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6947CC460AEBEE932D50BC /* ITextKit */; };
+		2AFA82E7B59F13637B0FF992 /* ITextKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3E08E768CA7DE1A7605DDB0A /* ITextKit */; };
 		37B5D88FEE72DC2C9C2FFBC3 /* ITextKitExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AED1582A5B85D7DA567E802 /* ITextKitExampleUITests.swift */; };
+		87887FAB3406DBC57ECDDB11 /* ITextKitExamplePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C0B5E834B74DA19C4C8959 /* ITextKitExamplePerformanceTests.swift */; };
 		90227570F5D35C9BBE6E1E5D /* ExampleRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D95A985D7F53AB66AAE430E /* ExampleRootView.swift */; };
 		B22ED530245472AD653BF5AF /* UIKitExampleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6013A534E95305B9A6F2120 /* UIKitExampleViewController.swift */; };
+		BFEC0B60215577CE29C38F7B /* StyledTextPerformanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */; };
 		C73CBC6CF9354ACF2D1F18ED /* ITextKitExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E6444CF648B7EDE82D05CD /* ITextKitExampleApp.swift */; };
 		F7B4B47D6B05F378794C8875 /* UIKitExampleContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0ACA90C7317D5EA4E0BB48D /* UIKitExampleContainer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		900A8D08D427F0CE135E7595 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F40F4B7B90BADEFBA098BDA7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 11507B51EB8793A92504507E;
+			remoteInfo = ITextKitExample;
+		};
 		DDFE33F6C2199814BE65E120 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F40F4B7B90BADEFBA098BDA7 /* Project object */;
@@ -29,9 +39,12 @@
 /* Begin PBXFileReference section */
 		08C41D0ED76EF952ABE87798 /* ITextKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ITextKit; path = ..; sourceTree = SOURCE_ROOT; };
 		0AED1582A5B85D7DA567E802 /* ITextKitExampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITextKitExampleUITests.swift; sourceTree = "<group>"; };
+		15C0B5E834B74DA19C4C8959 /* ITextKitExamplePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITextKitExamplePerformanceTests.swift; sourceTree = "<group>"; };
 		35BFC68CF671DAAB000A2809 /* SwiftUIExampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIExampleView.swift; sourceTree = "<group>"; };
+		3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyledTextPerformanceView.swift; sourceTree = "<group>"; };
 		6D95A985D7F53AB66AAE430E /* ExampleRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleRootView.swift; sourceTree = "<group>"; };
 		96CBE9255E3F96727A779851 /* ITextKitExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ITextKitExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CD57D59AFC6496D23A8F563 /* ITextKitExamplePerformanceTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ITextKitExamplePerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4E6444CF648B7EDE82D05CD /* ITextKitExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITextKitExampleApp.swift; sourceTree = "<group>"; };
 		D6013A534E95305B9A6F2120 /* UIKitExampleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitExampleViewController.swift; sourceTree = "<group>"; };
 		E0ACA90C7317D5EA4E0BB48D /* UIKitExampleContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitExampleContainer.swift; sourceTree = "<group>"; };
@@ -39,6 +52,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0369328CDE705B472EEC5DC2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2AFA82E7B59F13637B0FF992 /* ITextKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E627983BE64EAF01A16C7D72 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -54,6 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				96CBE9255E3F96727A779851 /* ITextKitExample.app */,
+				9CD57D59AFC6496D23A8F563 /* ITextKitExamplePerformanceTests.xctest */,
 				F83B401A95D132F831CDB592 /* ITextKitExampleUITests.xctest */,
 			);
 			name = Products;
@@ -63,6 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				A31B98B921A58F8E0D3ABAEB /* ITextKitExample */,
+				E7FD9E7886D55F92E3F5CC47 /* ITextKitExamplePerformanceTests */,
 				DB940F33F3AA72775AF37FE2 /* ITextKitExampleUITests */,
 				8250B30762DA60DF74B205B3 /* Packages */,
 				652C6D2BC0E6E42874136072 /* Products */,
@@ -82,6 +105,7 @@
 			children = (
 				6D95A985D7F53AB66AAE430E /* ExampleRootView.swift */,
 				A4E6444CF648B7EDE82D05CD /* ITextKitExampleApp.swift */,
+				3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */,
 				35BFC68CF671DAAB000A2809 /* SwiftUIExampleView.swift */,
 				E0ACA90C7317D5EA4E0BB48D /* UIKitExampleContainer.swift */,
 				D6013A534E95305B9A6F2120 /* UIKitExampleViewController.swift */,
@@ -95,6 +119,14 @@
 				0AED1582A5B85D7DA567E802 /* ITextKitExampleUITests.swift */,
 			);
 			path = ITextKitExampleUITests;
+			sourceTree = "<group>";
+		};
+		E7FD9E7886D55F92E3F5CC47 /* ITextKitExamplePerformanceTests */ = {
+			isa = PBXGroup;
+			children = (
+				15C0B5E834B74DA19C4C8959 /* ITextKitExamplePerformanceTests.swift */,
+			);
+			path = ITextKitExamplePerformanceTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -118,6 +150,26 @@
 			productName = ITextKitExample;
 			productReference = 96CBE9255E3F96727A779851 /* ITextKitExample.app */;
 			productType = "com.apple.product-type.application";
+		};
+		54E061EEC51CA2155FAA710D /* ITextKitExamplePerformanceTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49A24CEE04DB9F22C1A3A50B /* Build configuration list for PBXNativeTarget "ITextKitExamplePerformanceTests" */;
+			buildPhases = (
+				B4664473F616C565E0494DD6 /* Sources */,
+				0369328CDE705B472EEC5DC2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				900BD83C8627695CA81A6F01 /* PBXTargetDependency */,
+			);
+			name = ITextKitExamplePerformanceTests;
+			packageProductDependencies = (
+				3E08E768CA7DE1A7605DDB0A /* ITextKit */,
+			);
+			productName = ITextKitExamplePerformanceTests;
+			productReference = 9CD57D59AFC6496D23A8F563 /* ITextKitExamplePerformanceTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		EFC42F642596E2919BB79A93 /* ITextKitExampleUITests */ = {
 			isa = PBXNativeTarget;
@@ -149,6 +201,9 @@
 					11507B51EB8793A92504507E = {
 						DevelopmentTeam = "";
 					};
+					54E061EEC51CA2155FAA710D = {
+						DevelopmentTeam = "";
+					};
 					EFC42F642596E2919BB79A93 = {
 						DevelopmentTeam = "";
 						TestTargetID = 11507B51EB8793A92504507E;
@@ -173,6 +228,7 @@
 			projectRoot = "";
 			targets = (
 				11507B51EB8793A92504507E /* ITextKitExample */,
+				54E061EEC51CA2155FAA710D /* ITextKitExamplePerformanceTests */,
 				EFC42F642596E2919BB79A93 /* ITextKitExampleUITests */,
 			);
 		};
@@ -185,9 +241,18 @@
 			files = (
 				90227570F5D35C9BBE6E1E5D /* ExampleRootView.swift in Sources */,
 				C73CBC6CF9354ACF2D1F18ED /* ITextKitExampleApp.swift in Sources */,
+				BFEC0B60215577CE29C38F7B /* StyledTextPerformanceView.swift in Sources */,
 				0B222D61620F3DAD00760C07 /* SwiftUIExampleView.swift in Sources */,
 				F7B4B47D6B05F378794C8875 /* UIKitExampleContainer.swift in Sources */,
 				B22ED530245472AD653BF5AF /* UIKitExampleViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4664473F616C565E0494DD6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87887FAB3406DBC57ECDDB11 /* ITextKitExamplePerformanceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,6 +271,11 @@
 			isa = PBXTargetDependency;
 			target = 11507B51EB8793A92504507E /* ITextKitExample */;
 			targetProxy = DDFE33F6C2199814BE65E120 /* PBXContainerItemProxy */;
+		};
+		900BD83C8627695CA81A6F01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 11507B51EB8793A92504507E /* ITextKitExample */;
+			targetProxy = 900A8D08D427F0CE135E7595 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -348,6 +418,23 @@
 			};
 			name = Debug;
 		};
+		A88E57E168F3FD4678DAF775 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibabyblue.ITextKitExamplePerformanceTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ITextKitExample.app/ITextKitExample";
+			};
+			name = Debug;
+		};
 		B93D599AA2E7FA967597845F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -399,6 +486,23 @@
 			};
 			name = Release;
 		};
+		FEC0DC3C8F83EC37DF2ACA27 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibabyblue.ITextKitExamplePerformanceTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ITextKitExample.app/ITextKitExample";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -416,6 +520,15 @@
 			buildConfigurations = (
 				8DF9A81314550536FD4C5807 /* Debug */,
 				81AB78BE6A4E3A83141B1D84 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		49A24CEE04DB9F22C1A3A50B /* Build configuration list for PBXNativeTarget "ITextKitExamplePerformanceTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A88E57E168F3FD4678DAF775 /* Debug */,
+				FEC0DC3C8F83EC37DF2ACA27 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -439,6 +552,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3E08E768CA7DE1A7605DDB0A /* ITextKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ITextKit;
+		};
 		7A6947CC460AEBEE932D50BC /* ITextKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ITextKit;

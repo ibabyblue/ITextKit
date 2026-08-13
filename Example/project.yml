@@ -35,12 +35,35 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ibabyblue.ITextKitExampleUITests
         GENERATE_INFOPLIST_FILE: YES
+  ITextKitExamplePerformanceTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - ITextKitExamplePerformanceTests
+    dependencies:
+      - target: ITextKitExample
+      - package: ITextKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ibabyblue.ITextKitExamplePerformanceTests
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   ITextKitExample:
     build:
       targets:
         ITextKitExample: all
         ITextKitExampleUITests: [test]
+        ITextKitExamplePerformanceTests: [test]
     test:
       targets:
         - ITextKitExampleUITests
+        - ITextKitExamplePerformanceTests
+  ITextKitPerformance:
+    build:
+      targets:
+        ITextKitExample: all
+        ITextKitExamplePerformanceTests: [test]
+    test:
+      config: Release
+      targets:
+        - ITextKitExamplePerformanceTests
