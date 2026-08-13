@@ -333,13 +333,13 @@ final class _ITextMarqueeObservable: ObservableObject {
     /// Framework-independent marquee timing engine.
     private let engine: _ITextMarqueeEngine
 
-    /// Cancellable delay primitive used only for a reconstructed partial-cycle seam.
+    /// Cancellable delay primitive used between discrete renderer transitions.
     private let sleeper: (TimeInterval) async throws -> Void
 
-    /// Current one-shot seam task, if travel resumed from a partial cycle.
+    /// Current deferred initial-start or partial-cycle seam task.
     private var seamTask: Task<Void, Never>?
 
-    /// Invalidates obsolete seam completions after every discrete state change.
+    /// Invalidates obsolete deferred completions after every discrete state change.
     private var seamGeneration: UInt64 = 0
 
     /// Monotonic transition identity consumed by SwiftUI's animation modifier.
@@ -489,11 +489,12 @@ final class _ITextMarqueeObservable: ObservableObject {
         if plan.offset <= seamTolerance {
             publish(
                 snapshot: snapshot,
-                targetOffset: plan.cycleDistance,
-                duration: TimeInterval(plan.cycleDistance / plan.speed),
-                delay: plan.delay,
-                repeats: true
+                targetOffset: 0,
+                duration: 0,
+                delay: 0,
+                repeats: false
             )
+            scheduleInitialRepeatingCycle(plan: plan)
         } else {
             publish(
                 snapshot: snapshot,
@@ -506,7 +507,29 @@ final class _ITextMarqueeObservable: ObservableObject {
         }
     }
 
-    /// Cancels and invalidates any completion belonging to an older partial cycle.
+    /// Lets SwiftUI insert the moving copies at leading before animating their offset.
+    private func scheduleInitialRepeatingCycle(plan: _ITextMarqueeMotionPlan) {
+        let generation = seamGeneration
+        let sleeper = self.sleeper
+        seamTask = Task { @MainActor [weak self] in
+            do {
+                try await sleeper(0)
+            } catch {
+                return
+            }
+            guard let self, generation == seamGeneration else { return }
+            publish(
+                snapshot: engine.snapshot,
+                targetOffset: plan.cycleDistance,
+                duration: TimeInterval(plan.cycleDistance / plan.speed),
+                delay: plan.delay,
+                repeats: true
+            )
+            seamTask = nil
+        }
+    }
+
+    /// Cancels and invalidates any deferred renderer completion.
     private func cancelSeamTask() {
         seamGeneration &+= 1
         seamTask?.cancel()
