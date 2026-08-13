@@ -58,12 +58,3 @@ schemes:
       targets:
         - ITextKitExampleUITests
         - ITextKitExamplePerformanceTests
-  ITextKitPerformance:
-    build:
-      targets:
-        ITextKitExample: all
-        ITextKitExamplePerformanceTests: [test]
-    test:
-      config: Release
-      targets:
-        - ITextKitExamplePerformanceTests
