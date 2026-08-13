@@ -1,15 +1,19 @@
-# ITextKit Example
+# ITextKit Example API Catalog
 
-This offline iOS application demonstrates both public API families from the same local `ITextKit` package product.
+This offline application is a copyable teaching catalog for the public `ITextKit` product. Its two native tabs keep SwiftUI and UIKit APIs separate. Each tab contains six destinations:
 
-- **SwiftUI** shows plain `String` and rich `AttributedString` input. Rotator and marquee use declarative `ITextPlaybackState`; typewriter starts automatically; text shimmer uses `.shimmerText()`.
-- **UIKit** shows plain `String` and rich `NSAttributedString` input. Rotator and marquee include `start()`, `pause()`, `resume()`, and `stop()`; typewriter is an independent one-shot effect; text shimmer uses `ITextShimmerLabel`.
+- Styled Text / Styled Label
+- Rotator / Rotator View
+- Marquee / Marquee View
+- Typewriter / Typewriter View
+- Shimmer / Shimmer Label
+- Accessibility & Environment
 
-All rotator examples use short single-line messages. Rich examples still demonstrate font, color, bold, and underline attributes without wrapping.
-The typewriter examples grow from an empty visual size, preserve rich attributes, and wrap when they reach the caller-provided maximum width.
-Each framework tab includes a **Replay Typewriter** button that retriggers both typewriter examples without adding playback controls to the public Typewriter API.
-Both tabs also include a text shimmer sample. The original text remains the accessibility owner in each framework, while the decorative highlight copy stays hidden from accessibility and hit testing. Shimmer is controlled by `isActive` in SwiftUI or `isShimmering` in UIKit; it intentionally does not use `ITextPlaybackState`.
-The SwiftUI sample applies `.shimmerText()` before its outer frame, padding, and card background so only the text enters the animated copy.
+Every section places a live result beside a complete source snippet and a Copy action. The pages cover plain, attributed, and styled input; playback where the API supports it; intrinsic and multiline layout; semantic RTL; Dynamic Type; Reduce Motion; and accessibility ownership.
+
+Styled examples include solid and linear-gradient fill, solid and linear-gradient outline, and combined fill + outline + shimmer. Stroke `width` is the visible outward thickness in real points: `2` means a 2-point outline outside the glyph and does not squeeze the fill.
+
+SwiftUI styled content intentionally uses `ITextStyledText` with `UIFont` or `NSAttributedString`; it does not pretend to inspect an arbitrary native `Text` or `Font`. UIKit styled content uses `ITextStyledLabel` and retains normal UILabel intrinsic sizing and Auto Layout behavior.
 
 ## Generate and Run
 
@@ -21,4 +25,8 @@ xcodegen generate
 open ITextKitExample.xcodeproj
 ```
 
-Select the `ITextKitExample` scheme and any iOS 15 or newer simulator.
+Select the `ITextKitExample` scheme and any iOS 15 or newer simulator. The project resolves the package from `..`; generation and normal use require no network or remote dependency.
+
+## Maintainer Fixtures
+
+Launch with `-ITextStyledPerformance` to show the hidden 20-row styled-text fixture used by app-hosted performance tests. This argument is not part of the consumer-facing catalog.
