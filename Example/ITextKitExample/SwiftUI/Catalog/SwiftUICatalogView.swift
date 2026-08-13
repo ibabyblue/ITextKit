@@ -26,24 +26,8 @@ struct SwiftUICatalogView: View {
             SwiftUITypewriterExamplesView()
         case .shimmer:
             SwiftUIShimmerExamplesView()
-        default:
-            SwiftUITopicIntroductionView(topic: topic)
-        }
-    }
-}
-
-private struct SwiftUITopicIntroductionView: View {
-    let topic: DemoTopic
-
-    var body: some View {
-        SwiftUIDemoPage(
-            title: topic.swiftUITitle,
-            summary: topic.summary,
-            capabilities: topic.capabilities
-        ) {
-            SwiftUIDemoSection(snippet: topic.introductionSnippet) {
-                Text(topic.summary)
-            }
+        case .environment:
+            SwiftUIEnvironmentExamplesView()
         }
     }
 }

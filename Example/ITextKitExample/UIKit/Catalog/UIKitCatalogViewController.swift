@@ -59,8 +59,8 @@ final class UIKitCatalogViewController: UITableViewController {
             return UIKitTypewriterExamplesViewController()
         case .shimmer:
             return UIKitShimmerExamplesViewController()
-        default:
-            return UIKitDemoDetailViewController(topic: topic)
+        case .environment:
+            return UIKitEnvironmentExamplesViewController()
         }
     }
 }

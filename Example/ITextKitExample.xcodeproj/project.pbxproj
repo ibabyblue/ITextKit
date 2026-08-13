@@ -16,6 +16,7 @@
 		22EBEFCCB72E15B5336FDC6F /* SwiftUIShimmerExamplesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC40953503730EA0E6033E2A /* SwiftUIShimmerExamplesView.swift */; };
 		2753FC97D3CD7E2080DBC05A /* UIKitDemoCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91ED98EEA3C0A88BAEE96A8 /* UIKitDemoCodeView.swift */; };
 		2AFA82E7B59F13637B0FF992 /* ITextKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3E08E768CA7DE1A7605DDB0A /* ITextKit */; };
+		35A71BBFEE5016841B31B23F /* UIKitEnvironmentExamplesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14514E143B9DA9B9FA7CB970 /* UIKitEnvironmentExamplesViewController.swift */; };
 		37B5D88FEE72DC2C9C2FFBC3 /* ITextKitExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AED1582A5B85D7DA567E802 /* ITextKitExampleUITests.swift */; };
 		3A296BC834F31EBA77556102 /* SwiftUICatalogRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5411BD04C6B0B6B33B3967D5 /* SwiftUICatalogRow.swift */; };
 		3F9E9104CE121A9504D4CDB6 /* SwiftUITypewriterExamplesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A48A95621380FCB465B38D2 /* SwiftUITypewriterExamplesView.swift */; };
@@ -46,8 +47,10 @@
 		C73CBC6CF9354ACF2D1F18ED /* ITextKitExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E6444CF648B7EDE82D05CD /* ITextKitExampleApp.swift */; };
 		E0EDE46E8145AD32E52F0306 /* PerformanceFixtureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1FB5294985DBEF4DEEAE35 /* PerformanceFixtureUITests.swift */; };
 		EB67F08382E6117C3C40C586 /* MarqueeCatalogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E51C57CAEF8D8E5A31A554 /* MarqueeCatalogUITests.swift */; };
+		F202DA57A4D795464E137C11 /* SwiftUIEnvironmentExamplesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40A61E7F9FF4B87E91FBE35A /* SwiftUIEnvironmentExamplesView.swift */; };
 		F7B4B47D6B05F378794C8875 /* UIKitExampleContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0ACA90C7317D5EA4E0BB48D /* UIKitExampleContainer.swift */; };
 		FC71552FFC3C2FCD3DC294C9 /* DemoTopic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BDD69BD0D9E534B8C422CA /* DemoTopic.swift */; };
+		FEED014FD10B9F2E16AC36DB /* EnvironmentCatalogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6887484081AFD521C59B0BEF /* EnvironmentCatalogUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,15 +76,18 @@
 		09B27CA738BB3395C01372D9 /* UIKitCatalogCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitCatalogCell.swift; sourceTree = "<group>"; };
 		0AED1582A5B85D7DA567E802 /* ITextKitExampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITextKitExampleUITests.swift; sourceTree = "<group>"; };
 		0CA039745053033C868289DD /* SwiftUIMarqueeExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIMarqueeExamplesView.swift; sourceTree = "<group>"; };
+		14514E143B9DA9B9FA7CB970 /* UIKitEnvironmentExamplesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitEnvironmentExamplesViewController.swift; sourceTree = "<group>"; };
 		15C0B5E834B74DA19C4C8959 /* ITextKitExamplePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITextKitExamplePerformanceTests.swift; sourceTree = "<group>"; };
 		35BFC68CF671DAAB000A2809 /* SwiftUIExampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIExampleView.swift; sourceTree = "<group>"; };
 		3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyledTextPerformanceView.swift; sourceTree = "<group>"; };
+		40A61E7F9FF4B87E91FBE35A /* SwiftUIEnvironmentExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIEnvironmentExamplesView.swift; sourceTree = "<group>"; };
 		46E0B2BC986F084D8F07AB76 /* TypewriterCatalogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypewriterCatalogUITests.swift; sourceTree = "<group>"; };
 		4D1FB5294985DBEF4DEEAE35 /* PerformanceFixtureUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceFixtureUITests.swift; sourceTree = "<group>"; };
 		4FAD8773CEEDA70252682703 /* SwiftUIRotatorExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIRotatorExamplesView.swift; sourceTree = "<group>"; };
 		4FB3D51E5B522F31A254B345 /* UIKitRotatorExamplesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitRotatorExamplesViewController.swift; sourceTree = "<group>"; };
 		5411BD04C6B0B6B33B3967D5 /* SwiftUICatalogRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUICatalogRow.swift; sourceTree = "<group>"; };
 		6402EF74D8732D17B45D05FB /* SwiftUICatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUICatalogView.swift; sourceTree = "<group>"; };
+		6887484081AFD521C59B0BEF /* EnvironmentCatalogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentCatalogUITests.swift; sourceTree = "<group>"; };
 		6A48A95621380FCB465B38D2 /* SwiftUITypewriterExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITypewriterExamplesView.swift; sourceTree = "<group>"; };
 		6D95A985D7F53AB66AAE430E /* ExampleRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleRootView.swift; sourceTree = "<group>"; };
 		77081A830917B58B3A882369 /* DemoCapability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoCapability.swift; sourceTree = "<group>"; };
@@ -175,6 +181,7 @@
 		7820023F2F61BFC56D6E2BAF /* Examples */ = {
 			isa = PBXGroup;
 			children = (
+				14514E143B9DA9B9FA7CB970 /* UIKitEnvironmentExamplesViewController.swift */,
 				FCF1988F0ED18B738838D76D /* UIKitMarqueeExamplesViewController.swift */,
 				4FB3D51E5B522F31A254B345 /* UIKitRotatorExamplesViewController.swift */,
 				EE99BDC3D2476D948FD05B20 /* UIKitShimmerExamplesViewController.swift */,
@@ -252,6 +259,7 @@
 		DB906C0D4359A41D095B37A5 /* Examples */ = {
 			isa = PBXGroup;
 			children = (
+				40A61E7F9FF4B87E91FBE35A /* SwiftUIEnvironmentExamplesView.swift */,
 				0CA039745053033C868289DD /* SwiftUIMarqueeExamplesView.swift */,
 				4FAD8773CEEDA70252682703 /* SwiftUIRotatorExamplesView.swift */,
 				DC40953503730EA0E6033E2A /* SwiftUIShimmerExamplesView.swift */,
@@ -265,6 +273,7 @@
 			isa = PBXGroup;
 			children = (
 				FA53AD8DFDC078625DEE065A /* CatalogUITests.swift */,
+				6887484081AFD521C59B0BEF /* EnvironmentCatalogUITests.swift */,
 				7B794CD4019A06E13ADFD8A6 /* ITextKitExampleUITestCase.swift */,
 				0AED1582A5B85D7DA567E802 /* ITextKitExampleUITests.swift */,
 				D4E51C57CAEF8D8E5A31A554 /* MarqueeCatalogUITests.swift */,
@@ -415,6 +424,7 @@
 				7ECC0B6D59A52465113E1839 /* SwiftUIDemoCodeBlock.swift in Sources */,
 				64C72518D6A5570668E504CD /* SwiftUIDemoPage.swift in Sources */,
 				67C7B85E02AF2C708FE09A55 /* SwiftUIDemoSection.swift in Sources */,
+				F202DA57A4D795464E137C11 /* SwiftUIEnvironmentExamplesView.swift in Sources */,
 				0B222D61620F3DAD00760C07 /* SwiftUIExampleView.swift in Sources */,
 				50B3C1D36A01402E6F6E002E /* SwiftUIMarqueeExamplesView.swift in Sources */,
 				62B5A29E47276ECACDBF0569 /* SwiftUIRotatorExamplesView.swift in Sources */,
@@ -426,6 +436,7 @@
 				2753FC97D3CD7E2080DBC05A /* UIKitDemoCodeView.swift in Sources */,
 				0174DFE47B536172DD32FC03 /* UIKitDemoDetailViewController.swift in Sources */,
 				9209FABE715D53A5FD388BAD /* UIKitDemoSectionView.swift in Sources */,
+				35A71BBFEE5016841B31B23F /* UIKitEnvironmentExamplesViewController.swift in Sources */,
 				F7B4B47D6B05F378794C8875 /* UIKitExampleContainer.swift in Sources */,
 				B22ED530245472AD653BF5AF /* UIKitExampleViewController.swift in Sources */,
 				090980C3BF53C4A70F3AA271 /* UIKitMarqueeExamplesViewController.swift in Sources */,
@@ -449,6 +460,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D73244DC65E597597E7C2C9 /* CatalogUITests.swift in Sources */,
+				FEED014FD10B9F2E16AC36DB /* EnvironmentCatalogUITests.swift in Sources */,
 				BB409AEE0547C77CB998E4A0 /* ITextKitExampleUITestCase.swift in Sources */,
 				37B5D88FEE72DC2C9C2FFBC3 /* ITextKitExampleUITests.swift in Sources */,
 				EB67F08382E6117C3C40C586 /* MarqueeCatalogUITests.swift in Sources */,
