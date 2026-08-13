@@ -4,18 +4,14 @@ struct ExampleRootView: View {
     var body: some View {
         TabView {
             NavigationView {
-                SwiftUIExampleView()
-                    .navigationTitle("SwiftUI")
+                SwiftUICatalogView()
             }
+            .navigationViewStyle(.stack)
             .tabItem {
                 Label("SwiftUI", systemImage: "swift")
             }
 
-            NavigationView {
-                UIKitExampleContainer()
-                    .navigationTitle("UIKit")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
+            UIKitExampleContainer()
             .tabItem {
                 Label("UIKit", systemImage: "rectangle.3.group")
             }
