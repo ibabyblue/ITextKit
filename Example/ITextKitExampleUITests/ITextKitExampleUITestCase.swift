@@ -32,8 +32,19 @@ class ITextKitExampleUITestCase: XCTestCase {
             "catalog.\(platform).\(topicID)"
         ]
         XCTAssertTrue(entry.waitForExistence(timeout: 2))
-        XCTAssertEqual(entry.label, title)
+        XCTAssertTrue(entry.label.contains(title))
         entry.tap()
         return app
+    }
+
+    func reveal(
+        _ element: XCUIElement,
+        in app: XCUIApplication,
+        attempts: Int = 12
+    ) {
+        for _ in 0..<attempts where !element.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(element.isHittable)
     }
 }

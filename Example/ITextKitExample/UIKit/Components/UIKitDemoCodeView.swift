@@ -51,6 +51,7 @@ final class UIKitDemoCodeView: UIView {
             height: CGFloat.greatestFiniteMagnitude
         )
         codeView.layer.cornerRadius = 10
+        codeView.accessibilityLabel = snippet.code
         codeView.accessibilityIdentifier = "code.\(snippet.id)"
 
         let stack = UIStackView(arrangedSubviews: [header, codeView])

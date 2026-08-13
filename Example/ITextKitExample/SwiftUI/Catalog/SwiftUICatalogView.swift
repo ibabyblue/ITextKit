@@ -4,13 +4,23 @@ struct SwiftUICatalogView: View {
     var body: some View {
         List(DemoTopic.allCases) { topic in
             NavigationLink {
-                SwiftUITopicIntroductionView(topic: topic)
+                destination(for: topic)
             } label: {
                 SwiftUICatalogRow(topic: topic)
             }
             .accessibilityIdentifier("catalog.swiftui.\(topic.id)")
         }
         .navigationTitle("SwiftUI")
+    }
+
+    @ViewBuilder
+    private func destination(for topic: DemoTopic) -> some View {
+        switch topic {
+        case .styled:
+            SwiftUIStyledTextExamplesView()
+        default:
+            SwiftUITopicIntroductionView(topic: topic)
+        }
     }
 }
 

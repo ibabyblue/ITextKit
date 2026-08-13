@@ -38,9 +38,21 @@ final class UIKitCatalogViewController: UITableViewController {
         didSelectRowAt indexPath: IndexPath
     ) {
         tableView.deselectRow(at: indexPath, animated: true)
+        let topic = topics[indexPath.row]
         navigationController?.pushViewController(
-            UIKitDemoDetailViewController(topic: topics[indexPath.row]),
+            viewController(for: topic),
             animated: true
         )
+    }
+
+    private func viewController(
+        for topic: DemoTopic
+    ) -> UIViewController {
+        switch topic {
+        case .styled:
+            return UIKitStyledTextExamplesViewController()
+        default:
+            return UIKitDemoDetailViewController(topic: topic)
+        }
     }
 }
