@@ -1,8 +1,57 @@
+import QuartzCore
 import XCTest
 @testable import ITextKit
 
 @MainActor
 final class ITextMarqueeEngineTests: XCTestCase {
+    func testMotionPlanConsumesDelayAndFreezesExactOffset() throws {
+        let clock = TestClock()
+        let engine = makeEngine(
+            speed: 20,
+            spacing: 10,
+            delay: 1,
+            now: clock.now
+        )
+        engine.updateMetrics(contentWidth: 80, viewportWidth: 40)
+        engine.setEnvironmentActive(true)
+
+        XCTAssertEqual(try XCTUnwrap(engine.motionPlan).delay, 1)
+        clock.time = 1.5
+        engine.setPlaybackState(.paused)
+        XCTAssertEqual(engine.snapshot.offset, 10, accuracy: 0.000_001)
+
+        clock.time = 50
+        engine.setPlaybackState(.playing)
+        XCTAssertEqual(
+            try XCTUnwrap(engine.motionPlan).offset,
+            10,
+            accuracy: 0.000_001
+        )
+        XCTAssertEqual(try XCTUnwrap(engine.motionPlan).delay, 0)
+    }
+
+    func testSceneFreezeDuringInitialDelayPreservesRemainingDelay() throws {
+        let clock = TestClock()
+        let engine = makeEngine(
+            speed: 20,
+            spacing: 10,
+            delay: 1,
+            now: clock.now
+        )
+        engine.updateMetrics(contentWidth: 80, viewportWidth: 40)
+        engine.setEnvironmentActive(true)
+        clock.time = 0.25
+        engine.setEnvironmentActive(false)
+        clock.time = 20
+        engine.setEnvironmentActive(true)
+
+        XCTAssertEqual(
+            try XCTUnwrap(engine.motionPlan).delay,
+            0.75,
+            accuracy: 0.000_001
+        )
+    }
+
     func testInitialDelaySpeedAndSeamlessWrap() {
         let engine = makeEngine(speed: 10, spacing: 20, delay: 1)
         engine.updateMetrics(contentWidth: 100, viewportWidth: 50)
@@ -93,11 +142,21 @@ final class ITextMarqueeEngineTests: XCTestCase {
     private func makeEngine(
         speed: CGFloat,
         spacing: CGFloat,
-        delay: TimeInterval
+        delay: TimeInterval,
+        now: @escaping () -> CFTimeInterval = { 0 }
     ) -> _ITextMarqueeEngine {
         _ITextMarqueeEngine(
             configuration: .init(speed: speed, spacing: spacing, initialDelay: delay),
-            playbackState: .playing
+            playbackState: .playing,
+            now: now
         )
+    }
+}
+
+private final class TestClock {
+    var time: CFTimeInterval = 0
+
+    func now() -> CFTimeInterval {
+        time
     }
 }
