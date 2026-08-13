@@ -51,16 +51,16 @@ final class ITextKitExamplePerformanceTests: XCTestCase {
         XCTAssertEqual(label._layoutGeneration, generation)
     }
 
-    func testTenAnimationsDoNotRebuildLayoutOrPaths() {
+    func testSixMarqueesDoNotRebuildDuringSteadyTravel() {
         let controller = UIViewController()
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = controller
         window.makeKeyAndVisible()
 
-        var effects: [UIView] = []
-        for index in 0..<5 {
+        var marquees: [ITextMarqueeView] = []
+        for index in 0..<6 {
             let marquee = ITextMarqueeView(
-                text: fixture,
+                text: fixture + String(index),
                 configuration: .init(
                     speed: 40,
                     spacing: 24,
@@ -73,13 +73,55 @@ final class ITextKitExamplePerformanceTests: XCTestCase {
                 width: 300,
                 height: 32
             )
-            marquee.textStyle = style
+            if index == 2 || index == 3 {
+                marquee.textStyle = style
+            }
+            if index == 5 {
+                marquee.semanticContentAttribute = .forceRightToLeft
+            }
             controller.view.addSubview(marquee)
-            effects.append(marquee)
+            marquees.append(marquee)
+        }
+        controller.view.layoutIfNeeded()
+        marquees.forEach { $0.layoutIfNeeded() }
+        let labels = marquees.flatMap(\._movingLabels)
+        labels.forEach { $0.layer.displayIfNeeded() }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        labels.forEach { $0.layer.displayIfNeeded() }
+
+        XCTAssertTrue(marquees.allSatisfy(\._hasActiveTravelAnimation))
+        let measurements = marquees.map(\._measurementGeneration)
+        let layouts = labels.map(\._layoutGeneration)
+        let drawings = labels.map(\._drawingGeneration)
+        let cacheCount = _ITextGlyphPathCache.shared.entryCount
+        let cacheCost = _ITextGlyphPathCache.shared.estimatedCost
+
+        RunLoop.main.run(until: Date().addingTimeInterval(10))
+
+        XCTAssertEqual(marquees.map(\._measurementGeneration), measurements)
+        XCTAssertEqual(labels.map(\._layoutGeneration), layouts)
+        XCTAssertEqual(labels.map(\._drawingGeneration), drawings)
+        XCTAssertEqual(_ITextGlyphPathCache.shared.entryCount, cacheCount)
+        XCTAssertEqual(_ITextGlyphPathCache.shared.estimatedCost, cacheCost)
+        recordScalar(name: "marquee_measurement_rebuilds", value: 0)
+        recordScalar(name: "marquee_layout_rebuilds", value: 0)
+        recordScalar(name: "marquee_drawing_rebuilds", value: 0)
+        recordScalar(name: "marquee_path_rebuilds", value: 0)
+        window.isHidden = true
+    }
+
+    func testFiveShimmersDoNotRebuildLayoutOrPaths() {
+        let controller = UIViewController()
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+
+        var shimmers: [ITextShimmerLabel] = []
+        for index in 0..<5 {
 
             let shimmer = ITextShimmerLabel(frame: CGRect(
                 x: 0,
-                y: 190 + CGFloat(index) * 36,
+                y: CGFloat(index) * 36,
                 width: 300,
                 height: 32
             ))
@@ -87,12 +129,12 @@ final class ITextKitExamplePerformanceTests: XCTestCase {
             shimmer.textStyle = style
             shimmer.isShimmering = true
             controller.view.addSubview(shimmer)
-            effects.append(shimmer)
+            shimmers.append(shimmer)
         }
         controller.view.layoutIfNeeded()
-        effects.forEach { $0.layoutIfNeeded() }
+        shimmers.forEach { $0.layoutIfNeeded() }
 
-        let labels = effects.flatMap(styledLabels(in:))
+        let labels = shimmers.flatMap(styledLabels(in:))
         let generations = labels.map(\._layoutGeneration)
         let cacheCount = _ITextGlyphPathCache.shared.entryCount
         let cacheCost = _ITextGlyphPathCache.shared.estimatedCost
@@ -102,8 +144,8 @@ final class ITextKitExamplePerformanceTests: XCTestCase {
         XCTAssertEqual(labels.map(\._layoutGeneration), generations)
         XCTAssertEqual(_ITextGlyphPathCache.shared.entryCount, cacheCount)
         XCTAssertEqual(_ITextGlyphPathCache.shared.estimatedCost, cacheCost)
-        recordScalar(name: "animation_layout_rebuilds", value: 0)
-        recordScalar(name: "animation_path_rebuilds", value: 0)
+        recordScalar(name: "shimmer_layout_rebuilds", value: 0)
+        recordScalar(name: "shimmer_path_rebuilds", value: 0)
         window.isHidden = true
     }
 

@@ -42,6 +42,7 @@
 		BED80ECB491236B5848A06BA /* TypewriterCatalogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46E0B2BC986F084D8F07AB76 /* TypewriterCatalogUITests.swift */; };
 		BFEC0B60215577CE29C38F7B /* StyledTextPerformanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */; };
 		C73CBC6CF9354ACF2D1F18ED /* ITextKitExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E6444CF648B7EDE82D05CD /* ITextKitExampleApp.swift */; };
+		D359A5C552E47E9D0279A97A /* MarqueePerformanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A77E77AE341EB542C304BD /* MarqueePerformanceView.swift */; };
 		E0EDE46E8145AD32E52F0306 /* PerformanceFixtureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1FB5294985DBEF4DEEAE35 /* PerformanceFixtureUITests.swift */; };
 		EB67F08382E6117C3C40C586 /* MarqueeCatalogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E51C57CAEF8D8E5A31A554 /* MarqueeCatalogUITests.swift */; };
 		F202DA57A4D795464E137C11 /* SwiftUIEnvironmentExamplesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40A61E7F9FF4B87E91FBE35A /* SwiftUIEnvironmentExamplesView.swift */; };
@@ -74,6 +75,7 @@
 		0CA039745053033C868289DD /* SwiftUIMarqueeExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIMarqueeExamplesView.swift; sourceTree = "<group>"; };
 		14514E143B9DA9B9FA7CB970 /* UIKitEnvironmentExamplesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitEnvironmentExamplesViewController.swift; sourceTree = "<group>"; };
 		15C0B5E834B74DA19C4C8959 /* ITextKitExamplePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITextKitExamplePerformanceTests.swift; sourceTree = "<group>"; };
+		36A77E77AE341EB542C304BD /* MarqueePerformanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarqueePerformanceView.swift; sourceTree = "<group>"; };
 		3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyledTextPerformanceView.swift; sourceTree = "<group>"; };
 		40A61E7F9FF4B87E91FBE35A /* SwiftUIEnvironmentExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIEnvironmentExamplesView.swift; sourceTree = "<group>"; };
 		46E0B2BC986F084D8F07AB76 /* TypewriterCatalogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypewriterCatalogUITests.swift; sourceTree = "<group>"; };
@@ -229,6 +231,7 @@
 			children = (
 				6D95A985D7F53AB66AAE430E /* ExampleRootView.swift */,
 				A4E6444CF648B7EDE82D05CD /* ITextKitExampleApp.swift */,
+				36A77E77AE341EB542C304BD /* MarqueePerformanceView.swift */,
 				3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */,
 				E0ACA90C7317D5EA4E0BB48D /* UIKitExampleContainer.swift */,
 				719D7D2D26132D1DEFAF2455 /* Shared */,
@@ -409,6 +412,7 @@
 				FC71552FFC3C2FCD3DC294C9 /* DemoTopic.swift in Sources */,
 				90227570F5D35C9BBE6E1E5D /* ExampleRootView.swift in Sources */,
 				C73CBC6CF9354ACF2D1F18ED /* ITextKitExampleApp.swift in Sources */,
+				D359A5C552E47E9D0279A97A /* MarqueePerformanceView.swift in Sources */,
 				BFEC0B60215577CE29C38F7B /* StyledTextPerformanceView.swift in Sources */,
 				3A296BC834F31EBA77556102 /* SwiftUICatalogRow.swift in Sources */,
 				5623E656DCE69E08734E2A28 /* SwiftUICatalogView.swift in Sources */,
