@@ -51,6 +51,8 @@ final class UIKitCatalogViewController: UITableViewController {
         switch topic {
         case .styled:
             return UIKitStyledTextExamplesViewController()
+        case .rotator:
+            return UIKitRotatorExamplesViewController()
         default:
             return UIKitDemoDetailViewController(topic: topic)
         }

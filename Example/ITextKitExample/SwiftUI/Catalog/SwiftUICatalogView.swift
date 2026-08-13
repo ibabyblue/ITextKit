@@ -18,6 +18,8 @@ struct SwiftUICatalogView: View {
         switch topic {
         case .styled:
             SwiftUIStyledTextExamplesView()
+        case .rotator:
+            SwiftUIRotatorExamplesView()
         default:
             SwiftUITopicIntroductionView(topic: topic)
         }
