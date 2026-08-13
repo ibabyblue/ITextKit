@@ -7,15 +7,21 @@ struct SwiftUIDemoPage<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text(summary)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                capabilityTags
-                content
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    Text(summary)
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                    capabilityTags
+                    content
+                }
+                .frame(
+                    width: max(geometry.size.width - 40, 0),
+                    alignment: .leading
+                )
+                .padding(20)
             }
-            .padding(20)
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)

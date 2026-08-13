@@ -39,6 +39,24 @@ final class MarqueeCatalogUITests: ITextKitExampleUITestCase {
         XCTAssertTrue(configured.label.contains("text: \"Configured marquee"))
     }
 
+    func testSwiftUIMarqueePageDoesNotExceedScreenWidth() {
+        let app = open("Marquee")
+        let window = app.windows.firstMatch.frame
+
+        ["fitting", "overflow", "attributed", "styled", "configuration",
+         "rtl", "playback"].forEach { sample in
+            let code = app.descendants(matching: .any)[
+                "code.swiftui.marquee.\(sample)"
+            ]
+            XCTAssertTrue(code.exists)
+            XCTAssertLessThanOrEqual(
+                code.frame.width,
+                window.width - 40,
+                "\(sample) code frame \(code.frame) exceeds window \(window)"
+            )
+        }
+    }
+
     func testUIKitMarqueeTeachesInheritedRTLAndPlayback() {
         let app = open("Marquee View", inUIKit: true)
         assertSections(in: app)
