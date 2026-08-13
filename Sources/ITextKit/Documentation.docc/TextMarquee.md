@@ -28,6 +28,16 @@ ITextMarquee(attributedText: announcement)
 
 UIKit uses ``ITextMarqueeView/attributedText`` or `init(attributedText:configuration:playbackState:)`. Supply semantic single-line content. ITextKit does not remove newlines; native one-line rendering determines their presentation.
 
+## Playback
+
+SwiftUI receives ``ITextPlaybackState`` declaratively through each initializer. ``ITextPlaybackState/paused`` freezes the exact remaining initial delay or visible offset. Returning to ``ITextPlaybackState/playing`` continues from that position. ``ITextPlaybackState/stopped`` discards progress and returns to semantic leading.
+
+UIKit provides ``ITextMarqueeView/start()``, ``ITextMarqueeView/pause()``, ``ITextMarqueeView/resume()``, and ``ITextMarqueeView/stop()`` with the same progress rules. `start()` always begins a complete cycle; `resume()` changes state only when already paused.
+
+## Rendering Cost
+
+Steady travel is compositor-driven. UIKit moves one fixed container layer with Core Animation. Native SwiftUI publishes discrete renderer transitions rather than frame-rate observable state. Once geometry is prepared, movement does not remeasure text, rebuild copy layout, redraw styled content, or regenerate cached glyph paths.
+
 ## Semantic Direction
 
 Left-to-right environments move content left. Right-to-left environments move it right. A layout-direction change resets the content to semantic leading and reapplies the initial delay.

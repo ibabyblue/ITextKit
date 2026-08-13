@@ -17,6 +17,31 @@ translation on fixed copy geometry. Native SwiftUI marquee travel publishes
 only discrete animation transitions. Styled SwiftUI marquee content reuses the
 UIKit compositor path.
 
+## 0.3.1 Playback Regression
+
+The playback-control fixes were validated at package commit
+`2d42609bc27a9058824f269233fe69d222a5f870`. A real simulator UI regression
+scrolls the SwiftUI catalog, captures the visible plain Marquee, and exercises
+the complete sequence:
+
+1. playing produces different frames;
+2. Pause produces identical frames;
+3. Resume produces different frames again;
+4. Stop produces identical frames at the reset presentation;
+5. Start reapplies the initial delay and then produces different frames.
+
+The complete Example scheme passed serially with this regression. The same
+Release candidate then ran
+`testSixMarqueesDoNotRebuildDuringSteadyTravel()` for 10.140 seconds on the
+iPhone SE and passed with zero measurement, layout, drawing, and glyph-path
+rebuilds after warm-up. Its retained result is
+`/private/tmp/ITextKit-Marquee-Steady-Device-2.xcresult`.
+
+Physical-device UI Automation did not start: two attempts timed out while
+enabling automation mode before the test method initialized. This is not
+counted as passing physical-device playback-control evidence; the visible
+five-state sequence above is simulator UI evidence.
+
 ## Fixture
 
 The app was launched with `-ITextMarqueePerformance`. Its fixed-width `VStack`

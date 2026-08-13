@@ -2,6 +2,25 @@
 
 All notable changes to ITextKit are documented in this file.
 
+## 0.3.1 - 2026-08-13
+
+### Added
+
+- Separate SwiftUI and UIKit offline API catalogs with copy-ready plain, attributed, styled, playback, RTL, Dynamic Type, Reduce Motion, and accessibility examples.
+- A six-row Marquee performance fixture plus simulator and app-hosted device regression coverage.
+
+### Changed
+
+- Marquee timing is synchronized only at discrete state transitions while UIKit/Core Animation and native SwiftUI own steady compositor travel.
+- UIKit Marquee caches fixed copy geometry and styled drawing resources instead of measuring, laying out, or rebuilding glyph paths during movement.
+- Native SwiftUI Marquee no longer publishes frame-rate observable state.
+
+### Fixed
+
+- Native SwiftUI Marquee now inserts moving copies at semantic leading before starting travel instead of appearing stationary at the cycle target.
+- SwiftUI `.paused`, `.playing`, and `.stopped` updates now cancel obsolete repeating travel so Start, Pause, Resume, and Stop visibly follow the documented playback contract.
+- Styled SwiftUI Marquee respects its proposed viewport, and the SwiftUI example catalog stays within the device screen width.
+
 ## 0.3.0 - 2026-08-13
 
 ### Added

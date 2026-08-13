@@ -4,7 +4,7 @@ Native text motion controls for SwiftUI and UIKit, delivered as one Swift Packag
 
 ![iOS 15+](https://img.shields.io/badge/iOS-15%2B-blue)
 ![Swift 5.10+](https://img.shields.io/badge/Swift-5.10%2B-orange)
-![Release 0.3.0](https://img.shields.io/badge/release-0.3.0-purple)
+![Release 0.3.1](https://img.shields.io/badge/release-0.3.1-purple)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -42,7 +42,7 @@ For a `Package.swift` dependency:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.3.0")
+    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.3.1")
 ]
 ```
 
@@ -229,6 +229,10 @@ marquee.resume()
 ```
 
 Motion travels left in left-to-right layout and right in right-to-left layout. Changing text, font, bounds, layout direction, or configuration resets to semantic leading and reapplies the initial delay.
+
+Marquee travel is compositor-driven. UIKit uses one Core Animation translation over fixed copy geometry; native SwiftUI publishes only discrete start, pause, resume, stop, lifecycle, and seam transitions. Steady travel does not publish per-frame Swift state or rebuild text measurement, layout, drawing, or glyph paths.
+
+Set SwiftUI `playbackState` declaratively. `.paused` freezes the exact remaining delay or visible offset, changing back to `.playing` continues from that position, and `.stopped` discards progress and returns to semantic leading. Creating a new view identity while passing `.playing` starts a complete cycle. UIKit exposes the equivalent `start()`, `pause()`, `resume()`, and `stop()` methods.
 
 ## Text Typewriter
 
