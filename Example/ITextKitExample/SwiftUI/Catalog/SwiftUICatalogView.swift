@@ -22,6 +22,8 @@ struct SwiftUICatalogView: View {
             SwiftUIRotatorExamplesView()
         case .marquee:
             SwiftUIMarqueeExamplesView()
+        case .typewriter:
+            SwiftUITypewriterExamplesView()
         default:
             SwiftUITopicIntroductionView(topic: topic)
         }

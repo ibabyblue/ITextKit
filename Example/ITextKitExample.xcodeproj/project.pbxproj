@@ -16,6 +16,7 @@
 		2AFA82E7B59F13637B0FF992 /* ITextKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3E08E768CA7DE1A7605DDB0A /* ITextKit */; };
 		37B5D88FEE72DC2C9C2FFBC3 /* ITextKitExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AED1582A5B85D7DA567E802 /* ITextKitExampleUITests.swift */; };
 		3A296BC834F31EBA77556102 /* SwiftUICatalogRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5411BD04C6B0B6B33B3967D5 /* SwiftUICatalogRow.swift */; };
+		3F9E9104CE121A9504D4CDB6 /* SwiftUITypewriterExamplesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A48A95621380FCB465B38D2 /* SwiftUITypewriterExamplesView.swift */; };
 		4B1A088918E14F348CFAE9C1 /* UIKitRotatorExamplesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB3D51E5B522F31A254B345 /* UIKitRotatorExamplesViewController.swift */; };
 		4EFBA78F70B1F42D4973D9C6 /* UIKitCatalogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864415F4D133F30FF08B9D36 /* UIKitCatalogViewController.swift */; };
 		50B3C1D36A01402E6F6E002E /* SwiftUIMarqueeExamplesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA039745053033C868289DD /* SwiftUIMarqueeExamplesView.swift */; };
@@ -33,9 +34,11 @@
 		90227570F5D35C9BBE6E1E5D /* ExampleRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D95A985D7F53AB66AAE430E /* ExampleRootView.swift */; };
 		9209FABE715D53A5FD388BAD /* UIKitDemoSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3930DCB2662B2B618CAB86A /* UIKitDemoSectionView.swift */; };
 		959904B68D3DDB78F594DED5 /* SwiftUIStyledTextExamplesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70140579B758EB004EFC3BA /* SwiftUIStyledTextExamplesView.swift */; };
+		AF39953EAAD73011B262073B /* UIKitTypewriterExamplesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA1F9E70DE21DCB63F11BFB /* UIKitTypewriterExamplesViewController.swift */; };
 		B22ED530245472AD653BF5AF /* UIKitExampleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6013A534E95305B9A6F2120 /* UIKitExampleViewController.swift */; };
 		BB409AEE0547C77CB998E4A0 /* ITextKitExampleUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B794CD4019A06E13ADFD8A6 /* ITextKitExampleUITestCase.swift */; };
 		BBAFB684851763357C78BFAA /* DemoSnippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B466D0F94D3D6BF309E0E833 /* DemoSnippet.swift */; };
+		BED80ECB491236B5848A06BA /* TypewriterCatalogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46E0B2BC986F084D8F07AB76 /* TypewriterCatalogUITests.swift */; };
 		BFEC0B60215577CE29C38F7B /* StyledTextPerformanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */; };
 		C73CBC6CF9354ACF2D1F18ED /* ITextKitExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E6444CF648B7EDE82D05CD /* ITextKitExampleApp.swift */; };
 		E0EDE46E8145AD32E52F0306 /* PerformanceFixtureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1FB5294985DBEF4DEEAE35 /* PerformanceFixtureUITests.swift */; };
@@ -70,13 +73,16 @@
 		15C0B5E834B74DA19C4C8959 /* ITextKitExamplePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITextKitExamplePerformanceTests.swift; sourceTree = "<group>"; };
 		35BFC68CF671DAAB000A2809 /* SwiftUIExampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIExampleView.swift; sourceTree = "<group>"; };
 		3FC7971C36346A3FAA18E73A /* StyledTextPerformanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyledTextPerformanceView.swift; sourceTree = "<group>"; };
+		46E0B2BC986F084D8F07AB76 /* TypewriterCatalogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypewriterCatalogUITests.swift; sourceTree = "<group>"; };
 		4D1FB5294985DBEF4DEEAE35 /* PerformanceFixtureUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceFixtureUITests.swift; sourceTree = "<group>"; };
 		4FAD8773CEEDA70252682703 /* SwiftUIRotatorExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIRotatorExamplesView.swift; sourceTree = "<group>"; };
 		4FB3D51E5B522F31A254B345 /* UIKitRotatorExamplesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitRotatorExamplesViewController.swift; sourceTree = "<group>"; };
 		5411BD04C6B0B6B33B3967D5 /* SwiftUICatalogRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUICatalogRow.swift; sourceTree = "<group>"; };
 		6402EF74D8732D17B45D05FB /* SwiftUICatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUICatalogView.swift; sourceTree = "<group>"; };
+		6A48A95621380FCB465B38D2 /* SwiftUITypewriterExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITypewriterExamplesView.swift; sourceTree = "<group>"; };
 		6D95A985D7F53AB66AAE430E /* ExampleRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleRootView.swift; sourceTree = "<group>"; };
 		77081A830917B58B3A882369 /* DemoCapability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoCapability.swift; sourceTree = "<group>"; };
+		7AA1F9E70DE21DCB63F11BFB /* UIKitTypewriterExamplesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitTypewriterExamplesViewController.swift; sourceTree = "<group>"; };
 		7B794CD4019A06E13ADFD8A6 /* ITextKitExampleUITestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITextKitExampleUITestCase.swift; sourceTree = "<group>"; };
 		864415F4D133F30FF08B9D36 /* UIKitCatalogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitCatalogViewController.swift; sourceTree = "<group>"; };
 		88BDD69BD0D9E534B8C422CA /* DemoTopic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoTopic.swift; sourceTree = "<group>"; };
@@ -166,6 +172,7 @@
 				FCF1988F0ED18B738838D76D /* UIKitMarqueeExamplesViewController.swift */,
 				4FB3D51E5B522F31A254B345 /* UIKitRotatorExamplesViewController.swift */,
 				A24A5F56B38144C989DC34A9 /* UIKitStyledTextExamplesViewController.swift */,
+				7AA1F9E70DE21DCB63F11BFB /* UIKitTypewriterExamplesViewController.swift */,
 			);
 			path = Examples;
 			sourceTree = "<group>";
@@ -241,6 +248,7 @@
 				0CA039745053033C868289DD /* SwiftUIMarqueeExamplesView.swift */,
 				4FAD8773CEEDA70252682703 /* SwiftUIRotatorExamplesView.swift */,
 				A70140579B758EB004EFC3BA /* SwiftUIStyledTextExamplesView.swift */,
+				6A48A95621380FCB465B38D2 /* SwiftUITypewriterExamplesView.swift */,
 			);
 			path = Examples;
 			sourceTree = "<group>";
@@ -255,6 +263,7 @@
 				4D1FB5294985DBEF4DEEAE35 /* PerformanceFixtureUITests.swift */,
 				8C09C21D0F19FCB34E1F504C /* RotatorCatalogUITests.swift */,
 				088F047C9DC90E98463CC73B /* StyledTextCatalogUITests.swift */,
+				46E0B2BC986F084D8F07AB76 /* TypewriterCatalogUITests.swift */,
 			);
 			path = ITextKitExampleUITests;
 			sourceTree = "<group>";
@@ -401,6 +410,7 @@
 				50B3C1D36A01402E6F6E002E /* SwiftUIMarqueeExamplesView.swift in Sources */,
 				62B5A29E47276ECACDBF0569 /* SwiftUIRotatorExamplesView.swift in Sources */,
 				959904B68D3DDB78F594DED5 /* SwiftUIStyledTextExamplesView.swift in Sources */,
+				3F9E9104CE121A9504D4CDB6 /* SwiftUITypewriterExamplesView.swift in Sources */,
 				06949D1D1A475493F7523F85 /* UIKitCatalogCell.swift in Sources */,
 				4EFBA78F70B1F42D4973D9C6 /* UIKitCatalogViewController.swift in Sources */,
 				2753FC97D3CD7E2080DBC05A /* UIKitDemoCodeView.swift in Sources */,
@@ -411,6 +421,7 @@
 				090980C3BF53C4A70F3AA271 /* UIKitMarqueeExamplesViewController.swift in Sources */,
 				4B1A088918E14F348CFAE9C1 /* UIKitRotatorExamplesViewController.swift in Sources */,
 				5C26506384D4004055EF2F79 /* UIKitStyledTextExamplesViewController.swift in Sources */,
+				AF39953EAAD73011B262073B /* UIKitTypewriterExamplesViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -433,6 +444,7 @@
 				E0EDE46E8145AD32E52F0306 /* PerformanceFixtureUITests.swift in Sources */,
 				5D7EB6E9A35782B8A8853B8E /* RotatorCatalogUITests.swift in Sources */,
 				5A64150DC7D484E94650F976 /* StyledTextCatalogUITests.swift in Sources */,
+				BED80ECB491236B5848A06BA /* TypewriterCatalogUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

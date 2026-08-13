@@ -55,6 +55,8 @@ final class UIKitCatalogViewController: UITableViewController {
             return UIKitRotatorExamplesViewController()
         case .marquee:
             return UIKitMarqueeExamplesViewController()
+        case .typewriter:
+            return UIKitTypewriterExamplesViewController()
         default:
             return UIKitDemoDetailViewController(topic: topic)
         }
