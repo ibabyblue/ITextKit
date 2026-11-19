@@ -1,7 +1,8 @@
 # Image Canvas performance validation
 
-Date: 2026-11-18. Applies to the unreleased working-tree implementation of
-`ITextCanvasView` / `ITextCanvas`, not to the published 0.3.0 package.
+Measured on 2026-11-18 against the implementation committed as `da601f3`, included in
+ITextKit 0.4.0. Release preparation changes documentation only; these measurements cover
+`ITextCanvasView` / `ITextCanvas` and retain their original environment and limits.
 
 ## Design and optimization
 

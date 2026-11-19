@@ -4,7 +4,7 @@ Native text motion controls for SwiftUI and UIKit, delivered as one Swift Packag
 
 ![iOS 15+](https://img.shields.io/badge/iOS-15%2B-blue)
 ![Swift 5.10+](https://img.shields.io/badge/Swift-5.10%2B-orange)
-![Release 0.3.1](https://img.shields.io/badge/release-0.3.1-purple)
+![Release 0.4.0](https://img.shields.io/badge/release-0.4.0-purple)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -27,11 +27,11 @@ ITextKit is a UI component library for text presentation. It is not a wrapper ar
 - Reduce Motion, right-to-left layout, Dynamic Type, and VoiceOver-aware rendering
 - No third-party dependencies or runtime network access; image loading remains caller-owned
 
-## Image Canvas (unreleased)
+## Image Canvas
 
-The source checkout includes a native editable canvas for text and floating images. Long-press an
+ITextKit 0.4.0 includes a native editable canvas for text and floating images. Long-press an
 image to move it, or rotate with two fingers; text follows its rotated rectangular edges in real
-time. Editing and read-only rendering share the same layout. These APIs are not in the 0.3.1 tag.
+time. Editing and read-only rendering share the same layout. These APIs are available starting in 0.4.0.
 
 ```swift
 let canvas = ITextCanvasView()
@@ -83,7 +83,7 @@ For a `Package.swift` dependency:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.3.1")
+    .package(url: "https://github.com/ibabyblue/ITextKit.git", from: "0.4.0")
 ]
 ```
 

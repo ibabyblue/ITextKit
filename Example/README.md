@@ -10,7 +10,7 @@ This offline application is a copyable teaching catalog for the public `ITextKit
 - Accessibility & Environment
 - Image Canvas
 
-Image Canvas demonstrates editable text, offline pictures, long-press movement, two-finger
+Available since ITextKit 0.4.0, Image Canvas demonstrates editable text, offline pictures, long-press movement, two-finger
 rotation, live tilted-edge wrapping, and JSON save/restore. The UIKit page also provides document
 undo/redo and image removal. The SwiftUI page uses a document binding to the same native editor.
 Launch with `-ITextCanvasExample` or `-ITextCanvasSwiftUIExample` to enter either page directly.

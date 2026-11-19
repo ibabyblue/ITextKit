@@ -2,6 +2,8 @@
 
 Edit plain text around independently movable and rotatable images in UIKit and SwiftUI.
 
+Available starting in ITextKit 0.4.0.
+
 ## Ownership
 
 ``ITextCanvasView`` owns a native `UITextView`, image views, gestures, and a shared layout engine.
