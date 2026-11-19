@@ -18,13 +18,54 @@ ITextKit is a UI component library for text presentation. It is not a wrapper ar
 - `.shimmerText(...)` adds a native SwiftUI highlight sweep without replacing the original text
 - `ITextShimmerLabel` adds the same treatment to a native UIKit label
 - `ITextStyledText` and `ITextStyledLabel` add linear-gradient fill and exact outward outlines
+- `ITextCanvas` and `ITextCanvasView` edit plain text around movable, rotatable floating images
 - Plain `String` APIs plus native `AttributedString` and `NSAttributedString` input
 - One package product and one module: `import ITextKit` in SwiftUI, UIKit, or mixed targets
 - Declarative SwiftUI and imperative UIKit playback for rotator and marquee; automatic one-shot typewriter playback
 - Exact pause/resume for remaining delays, transition progress, height, and marquee offset
 - Lifecycle suspension that preserves explicit playback state and progress
 - Reduce Motion, right-to-left layout, Dynamic Type, and VoiceOver-aware rendering
-- No gestures, indicators, third-party dependencies, or runtime network access
+- No third-party dependencies or runtime network access; image loading remains caller-owned
+
+## Image Canvas (unreleased)
+
+The source checkout includes a native editable canvas for text and floating images. Long-press an
+image to move it, or rotate with two fingers; text follows its rotated rectangular edges in real
+time. Editing and read-only rendering share the same layout. These APIs are not in the 0.3.1 tag.
+
+```swift
+let canvas = ITextCanvasView()
+canvas.imageProvider = { key in loadedImages[key] }
+canvas.document = ITextCanvasDocument(
+    text: "Editable text with floating pictures…",
+    images: [ITextCanvasImage(
+        resourceKey: "photo", widthRatio: 0.4,
+        aspectRatio: 1.25, rotationDegrees: -12
+    )]
+)
+canvas.onDocumentChange = { document in
+    let data = try? JSONEncoder().encode(document)
+    // Save the complete text and layout in your application.
+}
+```
+
+```swift
+ITextCanvas(document: $document, imageProvider: { loadedImages[$0] })
+    .frame(height: 500)
+```
+
+Use a bounded height for internal scrolling. UIKit also supports intrinsic content height with
+`isScrollEnabled = false`. A document contains plain `text` and `images`, with UTF-16 anchors,
+relative positions, aspect ratios, resource keys, and rotation angles. Image bytes, uploads,
+networking, and persistence belong to the application. Increment SwiftUI `imageRevision` or call
+UIKit `reloadImages()` when asynchronous loading completes.
+
+One complete image gesture produces one document change and one undo operation. UIKit exposes
+`undo()`, `redo()`, `canUndo`, and `canRedo`; hardware Command-Z and Shift-Command-Z use the same
+document history. See [Image Canvas](Sources/ITextKit/Documentation.docc/ImageCanvas.md) for
+composition, collision, scrolling, and restoration semantics.
+See [Canvas performance validation](docs/performance/canvas.md) for physical-device timings,
+simulator outliers, the test procedure, and measurement limits.
 
 ## Requirements
 

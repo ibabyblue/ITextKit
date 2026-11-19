@@ -1,6 +1,6 @@
 # ITextKit Example API Catalog
 
-This offline application is a copyable teaching catalog for the public `ITextKit` product. Its two native tabs keep SwiftUI and UIKit APIs separate. Each tab contains six destinations:
+This offline application is a copyable teaching catalog for the public `ITextKit` product. Its two native tabs keep SwiftUI and UIKit APIs separate. Each tab contains seven destinations:
 
 - Styled Text / Styled Label
 - Rotator / Rotator View
@@ -8,6 +8,12 @@ This offline application is a copyable teaching catalog for the public `ITextKit
 - Typewriter / Typewriter View
 - Shimmer / Shimmer Label
 - Accessibility & Environment
+- Image Canvas
+
+Image Canvas demonstrates editable text, offline pictures, long-press movement, two-finger
+rotation, live tilted-edge wrapping, and JSON save/restore. The UIKit page also provides document
+undo/redo and image removal. The SwiftUI page uses a document binding to the same native editor.
+Launch with `-ITextCanvasExample` or `-ITextCanvasSwiftUIExample` to enter either page directly.
 
 Every section places a live result beside a complete source snippet and a Copy action. The pages cover plain, attributed, and styled input; playback where the API supports it; intrinsic and multiline layout; semantic RTL; Dynamic Type; Reduce Motion; and accessibility ownership.
 

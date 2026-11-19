@@ -23,6 +23,7 @@ class ITextKitExampleUITestCase: XCTestCase {
         case "Typewriter", "Typewriter View": topicID = "typewriter"
         case "Shimmer", "Shimmer Label": topicID = "shimmer"
         case "Accessibility & Environment": topicID = "environment"
+        case "Image Canvas": topicID = "canvas"
         default:
             XCTFail("Unknown catalog title: \(title)")
             return app
@@ -31,6 +32,7 @@ class ITextKitExampleUITestCase: XCTestCase {
         let entry = app.descendants(matching: .any)[
             "catalog.\(platform).\(topicID)"
         ]
+        if !entry.exists { app.swipeUp() }
         XCTAssertTrue(entry.waitForExistence(timeout: 2))
         XCTAssertTrue(entry.label.contains(title))
         entry.tap()

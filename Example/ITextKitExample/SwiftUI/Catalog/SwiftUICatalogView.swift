@@ -28,6 +28,8 @@ struct SwiftUICatalogView: View {
             SwiftUIShimmerExamplesView()
         case .environment:
             SwiftUIEnvironmentExamplesView()
+        case .canvas:
+            SwiftUICanvasExamplesView()
         }
     }
 }

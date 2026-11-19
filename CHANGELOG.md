@@ -2,6 +2,15 @@
 
 All notable changes to ITextKit are documented in this file.
 
+## Unreleased
+
+### Added
+
+- UIKit and SwiftUI image canvases with native text editing, long-press movement, two-finger rotation, and live wrapping along tilted image edges.
+- Codable text-plus-images documents with UTF-16 anchors, relative coordinates, shared edit/read-only layout, and caller-owned image loading.
+- Atomic image manipulation, document undo/redo, marked-input-safe binding updates, and offline examples.
+- Functional, native gesture, incremental-layout equivalence, and long-text performance regression coverage.
+
 ## 0.3.1 - 2026-08-13
 
 ### Added

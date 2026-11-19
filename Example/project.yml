@@ -40,6 +40,7 @@ targets:
     platform: iOS
     sources:
       - ITextKitExamplePerformanceTests
+      - ../Tests/ITextKitUIKitTests/ITextCanvasPerformanceTests.swift
     dependencies:
       - target: ITextKitExample
       - package: ITextKit

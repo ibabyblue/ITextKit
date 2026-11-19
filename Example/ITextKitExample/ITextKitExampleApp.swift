@@ -4,7 +4,11 @@ import SwiftUI
 struct ITextKitExampleApp: App {
     var body: some Scene {
         WindowGroup {
-            if ProcessInfo.processInfo.arguments.contains(
+            if ProcessInfo.processInfo.arguments.contains("-ITextCanvasExample") {
+                CanvasExampleHost()
+            } else if ProcessInfo.processInfo.arguments.contains("-ITextCanvasSwiftUIExample") {
+                SwiftUICanvasExamplesView()
+            } else if ProcessInfo.processInfo.arguments.contains(
                 "-ITextMarqueePerformance"
             ) {
                 MarqueePerformanceView()

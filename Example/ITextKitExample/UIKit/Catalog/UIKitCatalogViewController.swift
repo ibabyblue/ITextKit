@@ -61,6 +61,8 @@ final class UIKitCatalogViewController: UITableViewController {
             return UIKitShimmerExamplesViewController()
         case .environment:
             return UIKitEnvironmentExamplesViewController()
+        case .canvas:
+            return UIKitCanvasExamplesViewController()
         }
     }
 }

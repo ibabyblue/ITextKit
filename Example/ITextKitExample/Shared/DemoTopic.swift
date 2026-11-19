@@ -5,6 +5,7 @@ enum DemoTopic: String, CaseIterable, Identifiable {
     case typewriter
     case shimmer
     case environment
+    case canvas
 
     var id: String { rawValue }
 
@@ -16,6 +17,7 @@ enum DemoTopic: String, CaseIterable, Identifiable {
         case .typewriter: return "Typewriter"
         case .shimmer: return "Shimmer"
         case .environment: return "Accessibility & Environment"
+        case .canvas: return "Image Canvas"
         }
     }
 
@@ -27,6 +29,7 @@ enum DemoTopic: String, CaseIterable, Identifiable {
         case .typewriter: return "Typewriter View"
         case .shimmer: return "Shimmer Label"
         case .environment: return "Accessibility & Environment"
+        case .canvas: return "Image Canvas"
         }
     }
 
@@ -44,6 +47,8 @@ enum DemoTopic: String, CaseIterable, Identifiable {
             return "Sweep a decorative highlight over real accessible text."
         case .environment:
             return "Inspect direction, Dynamic Type, and accessibility behavior."
+        case .canvas:
+            return "Edit text around movable, rotatable images and save the complete layout."
         }
     }
 
@@ -61,6 +66,8 @@ enum DemoTopic: String, CaseIterable, Identifiable {
             return [.plain, .attributed, .styled, .accessibility]
         case .environment:
             return [.rtl, .dynamicType, .accessibility]
+        case .canvas:
+            return [.plain, .rtl, .dynamicType, .accessibility]
         }
     }
 

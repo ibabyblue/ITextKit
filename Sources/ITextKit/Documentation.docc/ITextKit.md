@@ -10,11 +10,24 @@ Use ``ITextRotator`` or ``ITextRotatorView`` for a sequence of variable-height m
 
 Use ``ITextStyledText`` or ``ITextStyledLabel`` for continuous linear-gradient fill and exact outward outlines. See <doc:StyledText> for geometry, rich-text ownership, RTL, Dynamic Type, and effect composition.
 
-Every control has a plain `String` API and an explicit framework-native attributed API. See <doc:AttributedText> for supported attributes, reset rules, accessibility, and mutability semantics.
+The motion and styled-text controls have plain and framework-native attributed APIs. See <doc:AttributedText> for supported attributes, reset rules, accessibility, and mutability semantics.
+
+Use ``ITextCanvas`` or ``ITextCanvasView`` for editable plain text with floating, draggable,
+rotatable images. See <doc:ImageCanvas> for document persistence, geometry, and interaction.
 
 ITextKit is a component library for text presentation. It is not an API wrapper around Apple's TextKit text-layout framework.
 
 ## Topics
+
+### Image Canvas
+
+- <doc:ImageCanvas>
+- ``ITextCanvas``
+- ``ITextCanvasView``
+- ``ITextCanvasDocument``
+- ``ITextCanvasImage``
+- ``ITextCanvasConfiguration``
+- ``ITextCanvasWrapping``
 
 ### Rotation
 
